@@ -1,0 +1,13 @@
+.vscode/
+audi/
+dcgp/
+emsdk/
+src/
+.babelrc
+.editorconfig
+.eslintignore
+.eslintrc.yml
+.gitignore
+.gitmodules
+.prettierrc.yml
+rollup.config.js
