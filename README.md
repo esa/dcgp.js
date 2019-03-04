@@ -3,6 +3,7 @@
 </h3>
 
 # dcgp.js
+JavaScript bindings for the [differential Cartesian Genetic Programming library](https://github.com/darioizzo/dcgp).
 
 ## Prerequisite
 - `node.js` >= 8
