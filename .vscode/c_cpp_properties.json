@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/dcgp/include",
+                "${workspaceFolder}/audi/include",
+                "${workspaceFolder}/src/bindings",
+                "${workspaceFolder}/emsdk/emscripten/1.38.28/system/include"
+            ],
+            "defines": [
+              "__EMSCRIPTEN__"
+            ],
+            "macFrameworkPath": [
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}

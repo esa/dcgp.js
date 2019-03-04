@@ -1,0 +1,6 @@
+node_modules
+lib
+dcgp.js
+dcgp.wasm
+dcgp.wasm.map
+dcgp.wast
