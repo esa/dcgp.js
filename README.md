@@ -37,4 +37,4 @@ npm run build
 - Assumes that WASM functions are not called before initialization has finished.
 
 ## Development
-Anyone is welcome to help progress and improve this library. Tasks can be found in the [dcgp.js project](https://github.com/mikeheddes/dcgp.js/projects/1). If your problem/task is not in the tasks then feel free to create an new issue explaining your problem/task.
+Anyone is welcome to help progress and improve this library. Tasks can be found in the [dcgp.js project](https://github.com/mikeheddes/dcgp.js/projects/1). If your problem/task is not in the tasks, feel free to create a new issue explaining your problem/task.
