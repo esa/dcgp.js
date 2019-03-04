@@ -5,6 +5,21 @@
 # dcgp.js
 JavaScript bindings for the [differential Cartesian Genetic Programming library](https://github.com/darioizzo/dcgp). The goal of this project is to provide a library that can run dcpg both on node.js and the web.
 
+## Installation
+
+Install dcgp with npm:
+
+```bash
+npm install dcgp
+```
+
+## Assumptions
+- This library asumes that the `dcgp.wasm` file is served from the same directory or from the root of the server.
+- Assumes that WASM functions are not called before initialization has finished.
+
+# Development
+Anyone is welcome to help progress and improve this library. Tasks can be found in the [dcgp.js project](https://github.com/mikeheddes/dcgp.js/projects/1). If your problem/task is not in the tasks, feel free to create a new issue explaining your problem/task.
+
 ## Prerequisite
 - `node.js` >= 8
 - `npm`
@@ -31,10 +46,3 @@ npm install
 npm run build:cpp
 npm run build
 ```
-
-## Assumptions
-- This library asumes that the `dcgp.wasm` file is served from the same directory or from the root of the server.
-- Assumes that WASM functions are not called before initialization has finished.
-
-## Development
-Anyone is welcome to help progress and improve this library. Tasks can be found in the [dcgp.js project](https://github.com/mikeheddes/dcgp.js/projects/1). If your problem/task is not in the tasks, feel free to create a new issue explaining your problem/task.
