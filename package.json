@@ -1,8 +1,9 @@
 {
   "name": "dcgp",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "JavaScript bindings of dcgp compiled to WebAssembly",
-  "main": "lib/index.js",
+  "main": "lib/index.umd.js",
+  "module": "lib/dcgp.es.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/mikeheddes/dcgp.js.git"
@@ -10,7 +11,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:cpp": "emcc src/bindings/* -o dcgp.js -I$(pwd)/dcgp/include/ -I$(pwd)/audi/include/ -std=c++11 -g4 --source-map-base http://localhost:8080/ -O3 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME=dcgp",
-    "build": "rm lib/dcgp* && rollup -c"
+    "build": "rm lib/* && rollup -c"
   },
   "keywords": [
     "dcgp",

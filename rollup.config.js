@@ -13,6 +13,7 @@ export default {
     copy({
       'dcgp.wasm': 'lib/dcgp.wasm',
       'dcgp.wasm.map': 'lib/dcgp.wasm.map',
+      'src/index.html': 'lib/index.html',
     }),
   ],
   output: [
