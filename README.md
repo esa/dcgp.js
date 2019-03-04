@@ -3,7 +3,7 @@
 </h3>
 
 # dcgp.js
-JavaScript bindings for the [differential Cartesian Genetic Programming library](https://github.com/darioizzo/dcgp).
+JavaScript bindings for the [differential Cartesian Genetic Programming library](https://github.com/darioizzo/dcgp). The goal of this project is to provide a library that can run dcpg both on node.js and the web.
 
 ## Prerequisite
 - `node.js` >= 8
