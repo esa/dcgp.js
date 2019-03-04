@@ -32,7 +32,7 @@ npm run build:cpp
 npm run build
 ```
 
-## Asumptions
+## Assumptions
 - This library asumes that the `dcgp.wasm` file is served from the same directory or from the root of the server.
 - Assumes that WASM functions are not called before initialization has finished.
 
