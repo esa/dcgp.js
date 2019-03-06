@@ -1,5 +1,9 @@
 import { setInHEAP } from './helpers';
 
+function randomSeed() {
+  return Math.round(Math.random() * 10000);
+}
+
 export default function ExpressionInitializer(dcgp) {
   const {
     // HEAPU8,
@@ -25,7 +29,7 @@ export default function ExpressionInitializer(dcgp) {
       levelsBack,
       arity,
       kernelSet,
-      seed = Math.random
+      seed = randomSeed
     ) {
       const calculatedSeed = typeof seed === 'function' ? seed() : seed;
 

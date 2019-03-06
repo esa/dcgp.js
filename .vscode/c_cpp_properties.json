@@ -19,6 +19,34 @@
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/dcgp/include",
+                "${workspaceFolder}/audi/include",
+                "${workspaceFolder}/src/bindings",
+                "${workspaceFolder}/emsdk/emscripten/1.38.28/system/include"
+            ],
+            "defines": [
+              "__EMSCRIPTEN__"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        },
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/dcgp/include",
+                "${workspaceFolder}/audi/include",
+                "${workspaceFolder}/src/bindings",
+                "${workspaceFolder}/emsdk/emscripten/1.38.28/system/include"
+            ],
+            "defines": [
+              "__EMSCRIPTEN__"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++17"
         }
     ],
     "version": 4
