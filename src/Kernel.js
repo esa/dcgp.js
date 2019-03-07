@@ -88,14 +88,14 @@ export default function KernelInitializer({ memory, exports }) {
       // const namePointer = stackAlloc(nameIntArray.byteLength);
       // setInHEAP(HEAPU8, nameIntArray, namePointer);
 
-      // const recievedPointer = _embind_kernel_0(
+      // const receivedPointer = _embind_kernel_0(
       //   operationPointer,
       //   printPointer,
       //   namePointer,
       //   nameIntArray.length
       // );
 
-      // Object.defineProperty(this, "pointer", { value: recievedPointer });
+      // Object.defineProperty(this, "pointer", { value: receivedPointer });
       // Object.defineProperty(this, "name", { value: name });
 
       // stackRestore(stackStart);

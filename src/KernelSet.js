@@ -34,6 +34,18 @@ export default function KernelSetInitializer(instance) {
   const Kernel = KernelInitializer(instance);
 
   return class KernelSet {
+    static SUM = kernelNameOptions.SUM;
+    static DIFF = kernelNameOptions.DIFF;
+    static MUL = kernelNameOptions.MUL;
+    static DIV = kernelNameOptions.DIV;
+    static PDIV = kernelNameOptions.PDIV;
+    static SIN = kernelNameOptions.SIN;
+    static COS = kernelNameOptions.COS;
+    static LOG = kernelNameOptions.LOG;
+    static EXP = kernelNameOptions.EXP;
+
+    static ALL_KERNELS = Object.values(kernelNameOptions);
+
     constructor(kernelNames, pointer = null) {
       if (pointer) {
         Object.defineProperty(this, 'pointer', { value: pointer });
@@ -59,33 +71,21 @@ export default function KernelSetInitializer(instance) {
         const lengthsPointer = stackAlloc(encoded.lengths.byteLength);
         setInHEAP(U16, encoded.lengths, lengthsPointer);
 
-        const recievedPointer = _embind_kernel_set_1(
+        const receivedPointer = _embind_kernel_set_1(
           namesPointer,
           lengthsPointer,
           kernelNames.length
         );
 
-        Object.defineProperty(this, 'pointer', { value: recievedPointer });
+        Object.defineProperty(this, 'pointer', { value: receivedPointer });
 
         stackRestore(stackStart);
         return;
       }
 
-      const recievedPointer = _embind_kernel_set_0();
-      Object.defineProperty(this, 'pointer', { value: recievedPointer });
+      const receivedPointer = _embind_kernel_set_0();
+      Object.defineProperty(this, 'pointer', { value: receivedPointer });
     }
-
-    static SUM = kernelNameOptions.SUM;
-    static DIFF = kernelNameOptions.DIFF;
-    static MUL = kernelNameOptions.MUL;
-    static DIV = kernelNameOptions.DIV;
-    static PDIV = kernelNameOptions.PDIV;
-    static SIN = kernelNameOptions.SIN;
-    static COS = kernelNameOptions.COS;
-    static LOG = kernelNameOptions.LOG;
-    static EXP = kernelNameOptions.EXP;
-
-    static ALL_KERNELS = Object.values(kernelNameOptions);
 
     toString() {
       const kernels = this.getKernels();

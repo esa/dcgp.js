@@ -41,14 +41,16 @@ export default function ExpressionInitializer({ memory, exports }) {
         calculatedSeed
       );
 
-      Object.defineProperty(this, 'pointer', { value: pointer });
-      Object.defineProperty(this, 'inputs', { value: inputs });
-      Object.defineProperty(this, 'outputs', { value: outputs });
-      Object.defineProperty(this, 'rows', { value: rows });
-      Object.defineProperty(this, 'columns', { value: columns });
-      Object.defineProperty(this, 'levelsBack', { value: levelsBack });
-      Object.defineProperty(this, 'arity', { value: arity });
-      Object.defineProperty(this, 'seed', { value: calculatedSeed });
+      Object.defineProperties(this, {
+        pointer: { value: pointer },
+        inputs: { value: inputs },
+        outputs: { value: outputs },
+        rows: { value: rows },
+        columns: { value: columns },
+        levelsBack: { value: levelsBack },
+        arity: { value: arity },
+        seed: { value: calculatedSeed },
+      });
     }
 
     getChromosome() {
