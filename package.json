@@ -1,6 +1,6 @@
 {
   "name": "dcgp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "JavaScript bindings of dcgp compiled to WebAssembly",
   "main": "lib/index.umd.js",
   "module": "lib/dcgp.es.js",
@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build:cpp": "emcc src/bindings/* -o dcgp.js -I$(pwd)/dcgp/include/ -I$(pwd)/audi/include/ -std=c++11 -g4 --source-map-base http://localhost:8080/ -O3 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME=dcgp",
+    "build:cpp": "emcc src/bindings/* -o dcgp.js -I$(pwd)/dcgp/include/ -I$(pwd)/audi/include/ -std=c++11 -g4 --source-map-base http://localhost:8080/ -O3 --pre-js ./src/pre.js",
     "build": "rm lib/* && rollup -c"
   },
   "keywords": [

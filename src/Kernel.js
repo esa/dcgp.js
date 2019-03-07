@@ -1,12 +1,8 @@
 import { setInHEAP, encodeStringArray, decoder } from './helpers';
 
-// export default function KernelInitializer({ HEAPU8, HEAPU16, HEAPU32, HEAPF64, exports }) {
-export default function KernelInitializer(dcgp) {
+export default function KernelInitializer({ memory, exports }) {
+  const { U8, U16, U32, F64 } = memory;
   const {
-    HEAPU8,
-    HEAPU16,
-    HEAPU32,
-    HEAPF64,
     stackSave,
     stackAlloc,
     stackRestore,
@@ -15,7 +11,7 @@ export default function KernelInitializer(dcgp) {
     _embind_kernel_call_double,
     _embind_kernel_call_string,
     _embind_kernel_destroy,
-  } = dcgp;
+  } = exports;
 
   return class Kernel {
     constructor(operatorFunction, stringFunction, name, pointer = null) {
@@ -28,14 +24,9 @@ export default function KernelInitializer(dcgp) {
 
         const namePointer = _embind_kernel_name(this.pointer, lengthPointer);
 
-        const nameLength =
-          HEAPU32[lengthPointer / Uint32Array.BYTES_PER_ELEMENT];
+        const nameLength = U32[lengthPointer / Uint32Array.BYTES_PER_ELEMENT];
 
-        const nameArray = new Uint8Array(
-          HEAPU8.buffer,
-          namePointer,
-          nameLength
-        );
+        const nameArray = new Uint8Array(U8.buffer, namePointer, nameLength);
 
         const retrievedName = decoder.decode(nameArray);
         Object.defineProperty(this, 'name', { value: retrievedName });
@@ -123,7 +114,7 @@ export default function KernelInitializer(dcgp) {
 
       const inputArrayF64 = new Float64Array(inputArray);
       const inputPointer = stackAlloc(inputArrayF64.byteLength);
-      setInHEAP(HEAPF64, inputArrayF64, inputPointer);
+      setInHEAP(F64, inputArrayF64, inputPointer);
 
       const result = _embind_kernel_call_double(
         this.pointer,
@@ -150,10 +141,10 @@ export default function KernelInitializer(dcgp) {
       const encoded = encodeStringArray(inputArray);
 
       const stringsPointer = stackAlloc(encoded.strings.byteLength);
-      setInHEAP(HEAPU8, encoded.strings, stringsPointer);
+      setInHEAP(U8, encoded.strings, stringsPointer);
 
       const lengthsPointer = stackAlloc(encoded.lengths.byteLength);
-      setInHEAP(HEAPU16, encoded.lengths, lengthsPointer);
+      setInHEAP(U16, encoded.lengths, lengthsPointer);
 
       const resultLengthPointer = stackAlloc(Uint16Array.BYTES_PER_ELEMENT);
 
@@ -166,9 +157,9 @@ export default function KernelInitializer(dcgp) {
       );
 
       const resultLength =
-        HEAPU16[resultLengthPointer / Uint16Array.BYTES_PER_ELEMENT];
+        U16[resultLengthPointer / Uint16Array.BYTES_PER_ELEMENT];
       const resultIntArray = new Uint8Array(
-        HEAPU8.buffer,
+        U8.buffer,
         resultPointer,
         resultLength
       );

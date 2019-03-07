@@ -13,12 +13,10 @@ const kernelNameOptions = {
   EXP: 'exp',
 };
 
-// export default function KernelSetInitializer({ HEAPU8, HEAPU16, HEAPU32, exports }) {
-export default function KernelSetInitializer(dcgp) {
+export default function KernelSetInitializer(instance) {
+  const { memory, exports } = instance;
+  const { U8, U16, U32 } = memory;
   const {
-    HEAPU8,
-    HEAPU16,
-    HEAPU32,
     stackSave,
     stackAlloc,
     stackRestore,
@@ -31,9 +29,9 @@ export default function KernelSetInitializer(dcgp) {
     _embind_kernel_set_index,
     _embind_kernel_set_clean,
     _embind_kernel_set_destroy,
-  } = dcgp;
+  } = exports;
 
-  const Kernel = KernelInitializer(dcgp);
+  const Kernel = KernelInitializer(instance);
 
   return class KernelSet {
     constructor(kernelNames, pointer = null) {
@@ -56,10 +54,10 @@ export default function KernelSetInitializer(dcgp) {
         const encoded = encodeStringArray(kernelNames);
 
         const namesPointer = stackAlloc(encoded.strings.byteLength);
-        setInHEAP(HEAPU8, encoded.strings, namesPointer);
+        setInHEAP(U8, encoded.strings, namesPointer);
 
         const lengthsPointer = stackAlloc(encoded.lengths.byteLength);
-        setInHEAP(HEAPU16, encoded.lengths, lengthsPointer);
+        setInHEAP(U16, encoded.lengths, lengthsPointer);
 
         const recievedPointer = _embind_kernel_set_1(
           namesPointer,
@@ -122,7 +120,7 @@ export default function KernelSetInitializer(dcgp) {
 
       const textArray = encoder.encode(kernel);
       const textPointer = stackAlloc(textArray.byteLength);
-      setInHEAP(HEAPU8, textArray, textPointer);
+      setInHEAP(U8, textArray, textPointer);
 
       _embind_kernel_set_push_back_0(this.pointer, textPointer, kernel.length);
 
@@ -141,7 +139,7 @@ export default function KernelSetInitializer(dcgp) {
       _embind_kernel_set_call(this.pointer, pointersArrPointer);
 
       const kernelPointers = new Uint32Array(
-        HEAPU32.buffer,
+        U32.buffer,
         pointersArrPointer,
         numKernels
       );

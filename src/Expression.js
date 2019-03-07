@@ -4,12 +4,9 @@ function randomSeed() {
   return Math.round(Math.random() * 10000);
 }
 
-export default function ExpressionInitializer(dcgp) {
+export default function ExpressionInitializer({ memory, exports }) {
+  const { U32 } = memory;
   const {
-    // HEAPU8,
-    // HEAPU16,
-    HEAPU32,
-    // HEAPF64,
     stackSave,
     stackAlloc,
     stackRestore,
@@ -18,7 +15,7 @@ export default function ExpressionInitializer(dcgp) {
     _embind_expression_get,
     _embind_expression_set,
     _embind_expression_destroy,
-  } = dcgp;
+  } = exports;
 
   return class Expression {
     constructor(
@@ -62,9 +59,9 @@ export default function ExpressionInitializer(dcgp) {
       const arrayPointer = _embind_expression_get(this.pointer, lengthPointer);
 
       const chromosome = new Uint32Array(
-        HEAPU32.buffer,
+        U32.buffer,
         arrayPointer,
-        HEAPU32[lengthPointer / HEAPU32.BYTES_PER_ELEMENT]
+        U32[lengthPointer / U32.BYTES_PER_ELEMENT]
       );
 
       _embind_delete_uint32_array(arrayPointer);
@@ -91,7 +88,7 @@ export default function ExpressionInitializer(dcgp) {
       const intChromosome = new Uint32Array(chromosome);
       const chromosomePointer = stackAlloc(intChromosome.byteLength);
 
-      setInHEAP(HEAPU32, intChromosome, chromosomePointer);
+      setInHEAP(U32, intChromosome, chromosomePointer);
 
       _embind_expression_set(
         this.pointer,

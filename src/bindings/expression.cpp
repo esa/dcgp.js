@@ -1,7 +1,4 @@
 #include <emscripten.h>
-// #include <vector>
-// #include <iostream>
-// #include <string>
 
 #include "dcgp/expression.hpp"
 #include "dcgp/kernel_set.hpp"
