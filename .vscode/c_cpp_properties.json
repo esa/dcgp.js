@@ -9,7 +9,7 @@
                 "${workspaceFolder}/emsdk/emscripten/1.38.28/system/include"
             ],
             "defines": [
-              "__EMSCRIPTEN__"
+                "__EMSCRIPTEN__"
             ],
             "macFrameworkPath": [
                 "/System/Library/Frameworks",
@@ -29,7 +29,7 @@
                 "${workspaceFolder}/emsdk/emscripten/1.38.28/system/include"
             ],
             "defines": [
-              "__EMSCRIPTEN__"
+                "__EMSCRIPTEN__"
             ],
             "cStandard": "c11",
             "cppStandard": "c++17"
@@ -43,7 +43,7 @@
                 "${workspaceFolder}/emsdk/emscripten/1.38.28/system/include"
             ],
             "defines": [
-              "__EMSCRIPTEN__"
+                "__EMSCRIPTEN__"
             ],
             "cStandard": "c11",
             "cppStandard": "c++17"

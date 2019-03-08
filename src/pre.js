@@ -37,12 +37,12 @@ async function getModuleAndInstance(fetchInstance, arrayBufferInstance) {
       const body = await fetchInstance;
       const bytes = await body.arrayBuffer();
 
-      module = WebAssembly.compile(bytes);
-      instance = WebAssembly.instantiate(bytes, importObject);
+      module = await WebAssembly.compile(bytes);
+      instance = await WebAssembly.instantiate(bytes, importObject);
     }
   } else {
-    module = WebAssembly.compile(arrayBufferInstance);
-    instance = WebAssembly.instantiate(module, importObject);
+    module = await WebAssembly.compile(arrayBufferInstance);
+    instance = await WebAssembly.instantiate(module, importObject);
   }
 
   instance.table = importObject.env.table;
