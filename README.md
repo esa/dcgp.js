@@ -19,7 +19,6 @@ Anyone is welcome to help progress and improve this library. Tasks can be found 
 ## Prerequisite
 - `node.js` >= 8
 - `npm`
-- MacOS or Linux
 
 ## Installation
 
@@ -28,11 +27,13 @@ git clone https://github.com/mikeheddes/dcgp.js.git
 
 cd dcgp.js/emsdk
 
-# Commands to install emscripten, see: https://emscripten.org/docs/getting_started/downloads.html
+# Commands to install emscripten
+# For Windows see the notes: https://emscripten.org/docs/getting_started/downloads.html
 ./emsdk install latest
 ./emsdk activate latest
 
 # Activate PATH and other environment variables in the current terminal
+# This step needs te be repeated when opening a new shell
 source ./emsdk_env.sh
 
 cd ..
