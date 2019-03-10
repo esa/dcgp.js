@@ -11,4 +11,5 @@ src/
 .gitignore
 .gitmodules
 .prettierrc.yml
+cpp.build.js
 rollup.config.js
