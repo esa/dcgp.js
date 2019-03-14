@@ -7,7 +7,7 @@ JavaScript bindings for the [differential Cartesian Genetic Programming library]
 
 ## Installation
 
-Install dcgp with npm:
+Install dcgp.js with npm:
 
 ```bash
 npm install dcgp
