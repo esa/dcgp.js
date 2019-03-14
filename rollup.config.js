@@ -1,5 +1,6 @@
 import babel from 'rollup-plugin-babel';
 import copy from 'rollup-plugin-copy';
+import resolve from 'rollup-plugin-node-resolve';
 import pkg from './package.json';
 import fs from 'fs';
 import path from 'path';
@@ -29,34 +30,32 @@ function emptyDir(outputDir) {
   };
 }
 
-const inputDir = 'src';
-const outputDir = 'lib';
-
 export default {
-  input: path.join(inputDir, 'index.js'),
+  input: 'src/js/index.js',
   external: [
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.peerDependencies || {}),
   ],
   plugins: [
-    emptyDir(outputDir),
+    emptyDir('lib'),
+    resolve(),
     babel(),
     copy({
-      'dcgp.wasm': path.join(outputDir, 'dcgp.wasm'),
-      'dcgp.wasm.map': path.join(outputDir, 'dcgp.wasm.map'),
-      [path.join(inputDir, 'index.html')]: path.join(outputDir, 'index.html'),
+      'dcgp.wasm': 'lib/dcgp.wasm',
+      'dcgp.wasm.map': 'lib/dcgp.wasm.map',
+      'src/index.html': 'lib/index.html',
     }),
   ],
   output: [
     {
       format: 'umd',
-      file: path.join(outputDir, 'dcgp.umd.js'),
+      file: 'lib/dcgp.umd.js',
       name: 'dcgp',
       exports: 'named',
     },
     {
       format: 'es',
-      file: path.join(outputDir, 'dcgp.es.js'),
+      file: 'lib/dcgp.es.js',
     },
   ],
 };

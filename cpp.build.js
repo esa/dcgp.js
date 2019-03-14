@@ -3,7 +3,7 @@
 const execa = require('execa');
 const glob = require('glob');
 
-glob('src/bindings/*.cpp', null, async (error, files) => {
+glob('src/cpp/**/*.cpp', null, async (error, files) => {
   if (error) {
     throw new Error(error);
   }
@@ -21,7 +21,7 @@ glob('src/bindings/*.cpp', null, async (error, files) => {
     'http://localhost:8080/',
     '-O3',
     '--pre-js',
-    `${cwd}/src/pre.js`,
+    `${cwd}/src/js/pre.js`,
   ];
 
   args = files.concat(args);

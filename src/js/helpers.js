@@ -2,11 +2,11 @@ export const encoder = new TextEncoder();
 export const decoder = new TextDecoder('utf-8');
 
 export function encodeStringArray(stringArray) {
-  const concatedStrings = stringArray.join('');
+  const concatedStrings = stringArray.join('\0') + '\0';
   const stringsIntArray = encoder.encode(concatedStrings);
 
   const stringsLengths = stringArray.map(str => str.length);
-  const typedStringsLengths = new Uint16Array(stringsLengths);
+  const typedStringsLengths = new Uint32Array(stringsLengths);
 
   return {
     strings: stringsIntArray,
@@ -31,4 +31,16 @@ export function getTypedMemory(memory) {
     F32: new Float32Array(buffer),
     F64: new Float64Array(buffer),
   };
+}
+
+export function flatten(array2D) {
+  const flat = [];
+
+  for (const row of array2D) {
+    for (const item of row) {
+      flat.push(item);
+    }
+  }
+
+  return flat;
 }

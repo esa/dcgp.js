@@ -1,6 +1,5 @@
 #include <emscripten.h>
 #include <vector>
-#include <iostream>
 #include <string>
 #include <functional>
 
@@ -11,7 +10,7 @@ using namespace dcgp;
 extern "C"
 {
   // empty constructor
-  kernel<double> *EMSCRIPTEN_KEEPALIVE embind_kernel_0(double (*operator_func)(double *, int), void (*string_func)(char *, unsigned short int *, unsigned short int, char *), const char *const name_array, const unsigned short int name_length)
+  kernel<double> *EMSCRIPTEN_KEEPALIVE embind_kernel_0(double (*operator_func)(double *, int), void (*string_func)(char *, unsigned int *, unsigned int, char *), const char *const name_array, const unsigned int name_length)
   {
     std::string name_string(name_array, name_array + name_length);
 
@@ -27,7 +26,7 @@ extern "C"
 
       char input_array[0];
 
-      unsigned short int lengths[input_length];
+      unsigned int lengths[input_length];
 
       for (size_t i = 0; i < input_length; ++i)
       {
@@ -48,7 +47,7 @@ extern "C"
   }
 
   // compute and return the result of this kernel
-  double EMSCRIPTEN_KEEPALIVE embind_kernel_call_double(const kernel<double> *const self, const double *const input_numbers, unsigned short int len)
+  double EMSCRIPTEN_KEEPALIVE embind_kernel_call_double(const kernel<double> *const self, const double *const input_numbers, unsigned int len)
   {
     std::vector<double> input_vector(input_numbers, input_numbers + len);
 
@@ -58,7 +57,7 @@ extern "C"
   }
 
   // set the equation in an array
-  char *EMSCRIPTEN_KEEPALIVE embind_kernel_call_string(const kernel<double> *const self, const char *const input_chars, const unsigned short int *const lengths, unsigned short int len, unsigned short int *const out_length)
+  char *EMSCRIPTEN_KEEPALIVE embind_kernel_call_string(const kernel<double> *const self, const char *const input_chars, const unsigned int *const lengths, unsigned int len, unsigned int *const out_length)
   {
     std::vector<std::string> input_strings;
     input_strings.reserve(len);
@@ -73,6 +72,7 @@ extern "C"
       input_strings.emplace_back(string_start, string_end);
 
       shifted += lengths[i];
+      shifted++;
     }
 
     std::string tmp_result = (*self)(input_strings);
@@ -85,7 +85,7 @@ extern "C"
   }
 
   // set kernel name in array, return its pointer and set the length
-  char *EMSCRIPTEN_KEEPALIVE embind_kernel_name(const kernel<double> *const self, unsigned short int *const length)
+  char *EMSCRIPTEN_KEEPALIVE embind_kernel_name(const kernel<double> *const self, unsigned int *const length)
   {
     std::string tmp_name = self->get_name();
 
@@ -96,12 +96,6 @@ extern "C"
     strcpy(name, tmp_name.c_str());
 
     return name;
-  }
-
-  // print the kernel
-  void EMSCRIPTEN_KEEPALIVE embind_kernel_print(const kernel<double> *const self)
-  {
-    std::cout << *self << '\n';
   }
 
   // delete the kernel object from memory

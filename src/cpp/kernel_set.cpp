@@ -1,6 +1,5 @@
 #include <emscripten.h>
 #include <vector>
-#include <iostream>
 #include <string>
 
 #include "dcgp/kernel_set.hpp"
@@ -17,7 +16,7 @@ extern "C"
   }
 
   // vector constructor
-  kernel_set<double> *EMSCRIPTEN_KEEPALIVE embind_kernel_set_1(char *names, unsigned short int *lengths, unsigned short int len)
+  kernel_set<double> *EMSCRIPTEN_KEEPALIVE embind_kernel_set_1(char *names, unsigned int *lengths, unsigned int len)
   {
     std::vector<std::string> kernel_names;
     kernel_names.reserve(len);
@@ -32,13 +31,14 @@ extern "C"
       kernel_names.emplace_back(string_start, string_end);
 
       shifted += lengths[i];
+      shifted++;
     }
 
     return new kernel_set<double>(kernel_names);
   }
 
   // add kernel based on name
-  void EMSCRIPTEN_KEEPALIVE embind_kernel_set_push_back_0(kernel_set<double>* const self, const char* const name, unsigned short int len)
+  void EMSCRIPTEN_KEEPALIVE embind_kernel_set_push_back_0(kernel_set<double>* const self, const char* const name, unsigned int len)
   {
     std::string kernel_name(name, name + len);
 
@@ -66,7 +66,7 @@ extern "C"
   }
 
   // return pointer to kernel at index
-  kernel<double> *EMSCRIPTEN_KEEPALIVE embind_kernel_set_index(kernel_set<double>* const self, unsigned short int index)
+  kernel<double> *EMSCRIPTEN_KEEPALIVE embind_kernel_set_index(kernel_set<double>* const self, unsigned int index)
   {
     kernel<double> tmp_kernel = (*self)[index];
 
@@ -81,12 +81,6 @@ extern "C"
     std::vector<kernel<double>> kernels = (*self)();
 
     return kernels.size();
-  }
-
-  // print the kernels
-  void EMSCRIPTEN_KEEPALIVE embind_kernel_set_print(kernel_set<double>* const self)
-  {
-    std::cout << *self << '\n';
   }
 
   // remove all the kernels

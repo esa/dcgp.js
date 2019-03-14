@@ -6,7 +6,6 @@ extends:
   - plugin:prettier/recommended
 parser: babel-eslint
 plugins:
-  - eslint-comments
   - jest
   - import
 env:

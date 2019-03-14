@@ -1,15 +1,16 @@
-import dcgpInitializer from '../dcgp';
-import KernelSetInitializer from './KernelSet';
-import ExpressionInitializer from './Expression';
-import KernelInitializer from './Kernel';
+import dcgpInitializer from '../../dcgp';
+import KernelSetInitialiser from './KernelSet';
+import ExpressionInitialiser from './Expression';
+import KernelInitialiser from './Kernel';
+import algorithmsInitialiser from './algorithms';
 
 import { getTypedMemory } from './helpers';
 
 export function instantiateClasses(instance) {
   return {
-    Kernel: KernelInitializer(instance),
-    KernelSet: KernelSetInitializer(instance),
-    Expression: ExpressionInitializer(instance),
+    Kernel: KernelInitialiser(instance),
+    KernelSet: KernelSetInitialiser(instance),
+    Expression: ExpressionInitialiser(instance),
   };
 }
 
@@ -50,11 +51,13 @@ export async function createInstance(fetchOrArrayBuffer) {
   Object.assign(instance.memory, typedMemory);
 
   const classes = instantiateClasses(instance);
+  const algorithms = algorithmsInitialiser(instance);
 
   return {
     module,
     instance,
     ...classes,
+    algorithms,
   };
 }
 

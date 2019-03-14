@@ -10,8 +10,9 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run build:cpp && npm run build:js",
     "build:cpp": "node cpp.build.js",
-    "build": "rollup -c"
+    "build:js": "rollup -c"
   },
   "keywords": [
     "dcgp",

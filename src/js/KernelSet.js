@@ -13,9 +13,9 @@ const kernelNameOptions = {
   EXP: 'exp',
 };
 
-export default function KernelSetInitializer(instance) {
+export default function KernelSetInitialiser(instance) {
   const { memory, exports } = instance;
-  const { U8, U16, U32 } = memory;
+  const { U8, U32 } = memory;
   const {
     stackSave,
     stackAlloc,
@@ -69,7 +69,7 @@ export default function KernelSetInitializer(instance) {
         setInHEAP(U8, encoded.strings, namesPointer);
 
         const lengthsPointer = stackAlloc(encoded.lengths.byteLength);
-        setInHEAP(U16, encoded.lengths, lengthsPointer);
+        setInHEAP(U32, encoded.lengths, lengthsPointer);
 
         const receivedPointer = _embind_kernel_set_1(
           namesPointer,

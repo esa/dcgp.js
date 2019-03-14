@@ -1,11 +1,11 @@
-import { setInHEAP } from './helpers';
+import { setInHEAP, decoder, encodeStringArray } from './helpers';
 
 function randomSeed() {
   return Math.round(Math.random() * 10000);
 }
 
-export default function ExpressionInitializer({ memory, exports }) {
-  const { U32 } = memory;
+export default function ExpressionInitialiser({ memory, exports }) {
+  const { U8, U32, F64 } = memory;
   const {
     stackSave,
     stackAlloc,
@@ -14,7 +14,11 @@ export default function ExpressionInitializer({ memory, exports }) {
     _embind_expression_0,
     _embind_expression_get,
     _embind_expression_set,
+    _embind_expression_call_double,
+    _embind_expression_call_string,
     _embind_expression_destroy,
+    _embind_delete_double_array,
+    _embind_delete_string,
   } = exports;
 
   return class Expression {
@@ -99,6 +103,86 @@ export default function ExpressionInitializer({ memory, exports }) {
       );
 
       stackRestore(stackStart);
+    }
+
+    getResult(inputArray) {
+      if (!Array.isArray(inputArray)) {
+        throw 'inputArray is not an array';
+      }
+
+      if (!inputArray.every(i => typeof i === 'number')) {
+        throw 'Every entry of inputArray must be a number';
+      }
+
+      const stackStart = stackSave();
+
+      const inputArrayF64 = new Float64Array(inputArray);
+      const inputPointer = stackAlloc(inputArrayF64.byteLength);
+      setInHEAP(F64, inputArrayF64, inputPointer);
+
+      const resultLengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT);
+
+      const resultPointer = _embind_expression_call_double(
+        this.pointer,
+        inputPointer,
+        inputArray.length,
+        resultLengthPointer
+      );
+
+      const resultLength =
+        U32[resultLengthPointer / Uint32Array.BYTES_PER_ELEMENT];
+
+      const results = new Float64Array(F64.buffer, resultPointer, resultLength);
+
+      _embind_delete_double_array(resultPointer);
+      stackRestore(stackStart);
+
+      return Array.from(results);
+    }
+
+    getEquation(inputArray) {
+      if (!Array.isArray(inputArray)) {
+        throw 'inputArray is not an array';
+      }
+
+      if (!inputArray.every(i => typeof i === 'string')) {
+        throw 'Every entry of inputArray must be a string';
+      }
+
+      const stackStart = stackSave();
+
+      const encoded = encodeStringArray(inputArray);
+
+      const stringsPointer = stackAlloc(encoded.strings.byteLength);
+      setInHEAP(U8, encoded.strings, stringsPointer);
+
+      const lengthsPointer = stackAlloc(encoded.lengths.byteLength);
+      setInHEAP(U32, encoded.lengths, lengthsPointer);
+
+      const resultLengthPointer = stackAlloc(Uint16Array.BYTES_PER_ELEMENT);
+
+      const resultPointer = _embind_expression_call_string(
+        this.pointer,
+        stringsPointer,
+        lengthsPointer,
+        inputArray.length,
+        resultLengthPointer
+      );
+
+      const resultLength =
+        U32[resultLengthPointer / Uint32Array.BYTES_PER_ELEMENT];
+      const resultIntArray = new Uint8Array(
+        U8.buffer,
+        resultPointer,
+        resultLength
+      );
+
+      const result = decoder.decode(resultIntArray);
+
+      _embind_delete_string(resultPointer);
+      stackRestore(stackStart);
+
+      return result;
     }
 
     // // Gets the idx of the active genes in the current chromosome(numbering is from 0)

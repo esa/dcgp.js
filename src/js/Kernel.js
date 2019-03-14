@@ -1,7 +1,7 @@
 import { setInHEAP, encodeStringArray, decoder } from './helpers';
 
-export default function KernelInitializer({ memory, exports }) {
-  const { U8, U16, U32, F64 } = memory;
+export default function KernelInitialiser({ memory, exports }) {
+  const { U8, U32, F64 } = memory;
   const {
     stackSave,
     stackAlloc,
@@ -144,9 +144,9 @@ export default function KernelInitializer({ memory, exports }) {
       setInHEAP(U8, encoded.strings, stringsPointer);
 
       const lengthsPointer = stackAlloc(encoded.lengths.byteLength);
-      setInHEAP(U16, encoded.lengths, lengthsPointer);
+      setInHEAP(U32, encoded.lengths, lengthsPointer);
 
-      const resultLengthPointer = stackAlloc(Uint16Array.BYTES_PER_ELEMENT);
+      const resultLengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT);
 
       const resultPointer = _embind_kernel_call_string(
         this.pointer,
@@ -157,7 +157,7 @@ export default function KernelInitializer({ memory, exports }) {
       );
 
       const resultLength =
-        U16[resultLengthPointer / Uint16Array.BYTES_PER_ELEMENT];
+        U32[resultLengthPointer / Uint32Array.BYTES_PER_ELEMENT];
       const resultIntArray = new Uint8Array(
         U8.buffer,
         resultPointer,
@@ -165,6 +165,7 @@ export default function KernelInitializer({ memory, exports }) {
       );
       const result = decoder.decode(resultIntArray);
 
+      _embind_delete_string(resultPointer);
       stackRestore(stackStart);
 
       return result;
