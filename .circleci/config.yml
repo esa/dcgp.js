@@ -91,6 +91,8 @@ jobs:
       - run:
           name: Set Emscripten variables in environment
           command: |
+            echo "$(pwd)"
+            cd emsdk
             source ./emsdk_env.sh
             cd ..
 
