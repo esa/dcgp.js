@@ -84,19 +84,12 @@ jobs:
 
       - run:
           name: Activate Emscripten
-          command: |
-            cd emsdk
-            ./emsdk activate latest
-
-      - run:
-          name: Set Emscripten variables in environment
-          command: |
-            cd emsdk
-            source ./emsdk_env.sh
+          command: emsdk/emsdk activate latest
 
       - run:
           name: Building artifacts
           command: |
+            source emsdk/emsdk_env.sh
             echo $(which emcc)
             echo $(emcc --help)
             emcc src/cpp/**/*.cpp -o dcgp.js -I$(pwd)/dcgp/include/ -I$(pwd)/audi/include/ -std=c++11 -g4 --source-map-base http://localhost:8080/ -O3 --pre-js $(cwd)/src/js/pre.js
