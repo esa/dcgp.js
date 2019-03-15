@@ -91,16 +91,14 @@ jobs:
       - run:
           name: Set Emscripten variables in environment
           command: |
-            echo "$(pwd)"
             cd emsdk
             source ./emsdk_env.sh
-            cd ..
 
       - run:
           name: Building artifacts
           command: |
-            which emcc
-            emcc --help
+            echo $(which emcc)
+            echo $(emcc --help)
             emcc src/cpp/**/*.cpp -o dcgp.js -I$(pwd)/dcgp/include/ -I$(pwd)/audi/include/ -std=c++11 -g4 --source-map-base http://localhost:8080/ -O3 --pre-js $(cwd)/src/js/pre.js
             npm run build:cpp
             npm run build:js
