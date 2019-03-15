@@ -9,8 +9,17 @@ jobs:
       - checkout
 
       - run:
+          name: "Pulling submodules"
+          command: |
+            git submodule init
+            git submodule update --remote
+
+      - run:
           name: Store emsdk commit hash
-          command: cd emsdk && git rev-parse HEAD > ../.circleci/emsdk.hash && cd ..
+          command: |
+            cd emsdk
+            git rev-parse HEAD > ../.circleci/emsdk.hash
+            cd ..
 
       - restore_cache:
           name: Restoring emsdk install from cache
@@ -26,11 +35,11 @@ jobs:
 
       - run:
           name: Install Emscripten
-          command: cd emsdk && ./emsdk install latest
+          command: emsdk/emsdk install latest
 
       - run:
           name: Activate Emscripten
-          command: ./emsdk activate latest
+          command: emsdk/emsdk activate latest
 
       - run:
           name: Install packages
@@ -135,6 +144,7 @@ workflows:
           requires:
             - Install
             - Build
+            - Checks
           filters:
             branches:
               only: master
