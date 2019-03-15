@@ -1,7 +1,7 @@
 version: 2
 jobs:
 
-  Install:
+  Install-and-Build:
     docker:
       - image: circleci/node:10
     working_directory: ~/repo
@@ -35,10 +35,7 @@ jobs:
 
       - run:
           name: Install Emscripten
-          command: |
-            cd emsdk
-            ./emsdk install latest
-            cd ..
+          command: cd emsdk/emsdk install latest
 
       - run:
           name: Install packages
@@ -57,30 +54,6 @@ jobs:
           paths:
             - node_modules
           key: v1-npm-{{ checksum "package.json" }}
-
-      - persist_to_workspace:
-          root: ~/repo
-          paths:
-            - emsdk/clang
-            - emsdk/emscripten
-            - emsdk/node
-            - node_modules
-
-  Build:
-    docker:
-      - image: circleci/node:10
-    working_directory: ~/repo
-    steps:
-      - checkout
-
-      - run:
-          name: "Pulling submodules"
-          command: |
-            git submodule init
-            git submodule update --remote
-
-      - attach_workspace:
-          at: ~/repo
 
       - run:
           name: Activate Emscripten
@@ -104,6 +77,10 @@ jobs:
           paths:
             - lib
             - dcgp.*
+            - emsdk/clang
+            - emsdk/emscripten
+            - emsdk/node
+            - node_modules
 
   Checks:
     docker:
@@ -147,18 +124,13 @@ workflows:
   # The main workflow tests PR's and deploys master
   main:
     jobs:
-      - Install
-      - Build:
-          requires:
-            - Install
+      - Install-and-Build
       - Checks:
           requires:
-            - Install
-            - Build
+            - Install-and-Build
       - Deploy:
           requires:
-            - Install
-            - Build
+            - Install-and-Build
             - Checks
           filters:
             branches:
