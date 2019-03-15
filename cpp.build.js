@@ -3,7 +3,7 @@
 const execa = require('execa');
 const glob = require('glob');
 
-glob('src/cpp/**/*.cpp', null, async (error, files) => {
+glob('src/cpp/**/*.cpp', null, (error, files) => {
   if (error) {
     throw new Error(error);
   }
@@ -26,15 +26,15 @@ glob('src/cpp/**/*.cpp', null, async (error, files) => {
 
   args = files.concat(args);
 
-  try {
-    const { stdout, stderr } = await execa('emcc', args);
+  execa('emcc', args)
+    .then(({ stdout, stderr }) => {
+      if (stderr) {
+        console.error(stderr);
+      }
 
-    if (stderr) {
-      console.error(stderr);
-    }
-
-    console.log(stdout);
-  } catch (error) {
-    throw error;
-  }
+      console.log(stdout);
+    })
+    .catch(error => {
+      throw error;
+    });
 });

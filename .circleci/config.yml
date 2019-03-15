@@ -35,7 +35,10 @@ jobs:
 
       - run:
           name: Install Emscripten
-          command: emsdk/emsdk install latest
+          command: |
+            cd emsdk
+            ./emsdk install latest
+            cd ..
 
       - run:
           name: Install packages
@@ -44,7 +47,9 @@ jobs:
       - save_cache:
           name: Saving emsdk install to cache
           paths:
-            - emsdk
+            - emsdk/clang
+            - emsdk/emscripten
+            - emsdk/node
           key: v1-emsdk-{{ checksum ".circleci/emsdk.hash" }}
 
       - save_cache:
@@ -56,7 +61,9 @@ jobs:
       - persist_to_workspace:
           root: ~/repo
           paths:
-            - emsdk
+            - emsdk/clang
+            - emsdk/emscripten
+            - emsdk/node
             - node_modules
 
   Build:
@@ -72,21 +79,29 @@ jobs:
             git submodule init
             git submodule update --remote
 
-
       - attach_workspace:
           at: ~/repo
 
       - run:
           name: Activate Emscripten
-          command: emsdk/emsdk activate latest
+          command: |
+            cd emsdk
+            ./emsdk activate latest
 
       - run:
           name: Set Emscripten variables in environment
-          command: source ./emsdk/emsdk_env.sh
+          command: |
+            source ./emsdk_env.sh
+            cd ..
 
       - run:
           name: Building artifacts
-          command: npm run build
+          command: |
+            which emcc
+            emcc --help
+            emcc src/cpp/**/*.cpp -o dcgp.js -I$(pwd)/dcgp/include/ -I$(pwd)/audi/include/ -std=c++11 -g4 --source-map-base http://localhost:8080/ -O3 --pre-js $(cwd)/src/js/pre.js
+            npm run build:cpp
+            npm run build:js
 
       - store_artifacts:
           path: lib

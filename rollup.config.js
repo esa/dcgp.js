@@ -13,19 +13,21 @@ function emptyDir(outputDir) {
 
       return new Promise(resolve => {
         resolve(fs.statSync(absolutePath));
-      }).then(stats => {
-        if (!stats.isDirectory) {
-          Promise.reject('outputDir must be a directory');
-        }
+      })
+        .then(stats => {
+          if (!stats.isDirectory) {
+            Promise.reject('outputDir must be a directory');
+          }
 
-        const files = fs.readdirSync(absolutePath);
+          const files = fs.readdirSync(absolutePath);
 
-        for (let index = 0; index < files.length; index++) {
-          fs.unlinkSync(path.join(absolutePath, files[index]));
-        }
+          for (let index = 0; index < files.length; index++) {
+            fs.unlinkSync(path.join(absolutePath, files[index]));
+          }
 
-        return files;
-      });
+          return files;
+        })
+        .catch(() => {});
     },
   };
 }
