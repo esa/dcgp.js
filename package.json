@@ -1,6 +1,6 @@
 {
   "name": "dcgp",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "JavaScript bindings of dcgp compiled to WebAssembly",
   "main": "lib/dcgp.umd.js",
   "module": "lib/dcgp.es.js",
@@ -9,7 +9,9 @@
     "url": "git://github.com/mikeheddes/dcgp.js.git"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest src/ --watch",
+    "test:ci": "jest src/",
+    "lint": "eslint src/**/*.js",
     "build": "npm run build:cpp && npm run build:js",
     "build:cpp": "node cpp.build.js",
     "build:js": "rollup -c"

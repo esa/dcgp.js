@@ -1,5 +1,45 @@
-export const encoder = new TextEncoder();
-export const decoder = new TextDecoder('utf-8');
+// get the TextEncoder in browser and node.js
+function getEncoder(...args) {
+  let EncoderClass;
+
+  if (typeof TextEncoder !== 'undefined') {
+    // eslint-disable-next-line no-undef
+    EncoderClass = TextEncoder;
+  } else if (typeof require !== 'undefined') {
+    // eslint-disable-next-line no-undef
+    const util = require('util');
+    EncoderClass = util.TextEncoder;
+  } else {
+    throw new Error(
+      'The TextEncoder class is not available in your environment'
+    );
+  }
+
+  return new EncoderClass(...args);
+}
+
+// get the TextDecoder in browser and node.js
+function getDecoder(...args) {
+  let DecoderClass;
+
+  if (typeof TextDecoder !== 'undefined') {
+    // eslint-disable-next-line no-undef
+    DecoderClass = TextDecoder;
+  } else if (typeof require !== 'undefined') {
+    // eslint-disable-next-line no-undef
+    const util = require('util');
+    DecoderClass = util.TextEncoder;
+  } else {
+    throw new Error(
+      'The TextEncoder class is not available in your environment'
+    );
+  }
+
+  return new DecoderClass(...args);
+}
+
+export const encoder = getEncoder();
+export const decoder = getDecoder('utf-8');
 
 export function encodeStringArray(stringArray) {
   const concatedStrings = stringArray.join('\0') + '\0';

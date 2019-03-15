@@ -1,0 +1,140 @@
+version: 2
+jobs:
+
+  Install:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+      - checkout
+
+      - run:
+          name: Store emsdk commit hash
+          command: cd emsdk && git rev-parse HEAD > ../.circleci/emsdk.hash && cd ..
+
+      - restore_cache:
+          name: Restoring emsdk install from cache
+          keys:
+          - v1-emsdk-{{ checksum ".circleci/emsdk.hash" }}
+          - v1-emsdk-
+
+      - restore_cache:
+          name: Restoring NPM packages from cache
+          keys:
+          - v1-npm-{{ checksum "package.json" }}
+          - v1-npm-
+
+      - run:
+          name: Install Emscripten
+          command: cd emsdk && ./emsdk install latest
+
+      - run:
+          name: Activate Emscripten
+          command: ./emsdk activate latest
+
+      - run:
+          name: Install packages
+          command: npm install
+
+      - save_cache:
+          name: Saving emsdk install to cache
+          paths:
+            - emsdk
+          key: v1-emsdk-{{ checksum ".circleci/emsdk.hash" }}
+
+      - save_cache:
+          name: Saving NPM packages to cache
+          paths:
+            - node_modules
+          key: v1-npm-{{ checksum "package.json" }}
+
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - emsdk
+            - node_modules
+
+  Build:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: ~/repo
+
+      - run:
+          name: Set Emscripten variables in environment
+          command: source ./emsdk/emsdk_env.sh
+
+      - run:
+          name: Building artifacts
+          command: npm run build
+
+      - store_artifacts:
+          path: lib
+
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - lib
+            - dcgp.*
+
+  Checks:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: ~/repo
+
+      - run:
+          name: Linting code
+          command: npm run lint
+
+      - run:
+          name: Testing code
+          command: npm run test:ci
+
+  Deploy:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: ~/repo
+
+      - run:
+          name: Authenticating with registry
+          command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/repo/.npmrc
+
+      - run:
+          name: Publishing package
+          command: npm publish
+
+
+workflows:
+  version: 2
+  # The main workflow tests PR's and deploys master
+  main:
+    jobs:
+      - Install
+      - Build:
+          requires:
+            - Install
+      - Checks:
+          requires:
+            - Install
+            - Build
+      - Deploy:
+          requires:
+            - Install
+            - Build
+          filters:
+            branches:
+              only: master
