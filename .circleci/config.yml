@@ -108,7 +108,7 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/repo/.npmrc
 
       - run:
-          name: Publishing package
+          name: Publishing package on NPM
           command: npm publish
 
 
@@ -118,10 +118,17 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/repo
+
       - run:
-          name: "Publish Release on GitHub"
+          name: Installing dependencies
           command: |
-            VERSION=v$(npm view dcgp version)
+            apt-get update -yqq
+            apt-get install -yqq jq
+
+      - run:
+          name: Publishing Release on GitHub
+          command: |
+            VERSION=v$(cat package.json | jq -r .version)
             ghr -t ${GITHUB_TOKEN} \
             -u ${CIRCLE_PROJECT_USERNAME} \
             -r ${CIRCLE_PROJECT_REPONAME} \
