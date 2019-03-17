@@ -1,7 +1,7 @@
 version: 2
 jobs:
 
-  Install-and-Build:
+  install-and-build:
     docker:
       - image: circleci/node:10
     working_directory: ~/repo
@@ -75,7 +75,7 @@ jobs:
             - dcgp.*
             - node_modules
 
-  Checks:
+  checks:
     docker:
       - image: circleci/node:10
     working_directory: ~/repo
@@ -93,7 +93,7 @@ jobs:
           name: Testing code
           command: npm run test:ci
 
-  Deploy:
+  publish-npm-package:
     docker:
       - image: circleci/node:10
     working_directory: ~/repo
@@ -111,11 +111,23 @@ jobs:
           name: Publishing package
           command: npm publish
 
+
+  publish-github-release:
+    docker:
+      - image: cibuilds/github:0.10
+    steps:
+      - attach_workspace:
+          at: ~/repo
       - run:
-          name: Pushing tag to GitHub
+          name: "Publish Release on GitHub"
           command: |
-            git tag v$(npm view dcgp version)
-            git push origin --tags
+            VERSION=v$(npm view dcgp version)
+            ghr -t ${GITHUB_TOKEN} \
+            -u ${CIRCLE_PROJECT_USERNAME} \
+            -r ${CIRCLE_PROJECT_REPONAME} \
+            -c ${CIRCLE_SHA1} \
+            -delete \
+            ${VERSION} ./dcgp.wasm
 
 
 workflows:
@@ -123,14 +135,21 @@ workflows:
   # The main workflow tests PR's and deploys master
   main:
     jobs:
-      - Install-and-Build
-      - Checks:
+      - install-and-build
+      - checks:
           requires:
-            - Install-and-Build
-      - Deploy:
+            - install-and-build
+      - publish-npm-package:
           requires:
-            - Install-and-Build
-            - Checks
+            - install-and-build
+            - checks
+          filters:
+            branches:
+              only: master
+      - publish-github-release:
+          requires:
+            - install-and-build
+            - checks
           filters:
             branches:
               only: master
