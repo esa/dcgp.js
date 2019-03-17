@@ -65,6 +65,7 @@ extern "C"
       };
     };
 
+    self->set(best_chromosome);
     return best_fitness;
   };
 }
