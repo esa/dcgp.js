@@ -18,12 +18,12 @@ jobs:
           name: Store emsdk commit hash
           command: |
             cd emsdk
-            git rev-parse HEAD > ../.circleci/emsdk.hash
+            git rev-parse HEAD > ../.circleci/emsdk-hash
 
       - restore_cache:
           name: Restoring emsdk install from cache
           keys:
-          - v1-emsdk-{{ checksum ".circleci/emsdk.hash" }}
+          - v1-emsdk-{{ checksum ".circleci/emsdk-hash" }}
           - v1-emsdk-
 
       - restore_cache:
@@ -46,7 +46,7 @@ jobs:
             - emsdk/clang
             - emsdk/emscripten
             - emsdk/node
-          key: v1-emsdk-{{ checksum ".circleci/emsdk.hash" }}
+          key: v1-emsdk-{{ checksum ".circleci/emsdk-hash" }}
 
       - save_cache:
           name: Saving NPM packages to cache
@@ -65,6 +65,11 @@ jobs:
             npm run build:cpp
             npm run build:js
 
+      - run:
+          name: Store package version
+          command: |
+            echo "v$(npm view dcgp version)" > .circleci/dcgp-version
+
       - store_artifacts:
           path: lib
 
@@ -72,6 +77,7 @@ jobs:
           root: ~/repo
           paths:
             - lib
+            - .circleci/dcgp-version
             - dcgp.*
             - node_modules
 
@@ -120,15 +126,9 @@ jobs:
           at: ~/repo
 
       - run:
-          name: Installing dependencies
-          command: |
-            apt-get update -yqq
-            apt-get install -yqq jq
-
-      - run:
           name: Publishing Release on GitHub
           command: |
-            VERSION=v$(cat package.json | jq -r .version)
+            VERSION=$(cat .circleci/dcgp-version)
             ghr -t ${GITHUB_TOKEN} \
             -u ${CIRCLE_PROJECT_USERNAME} \
             -r ${CIRCLE_PROJECT_REPONAME} \

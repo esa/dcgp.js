@@ -41,21 +41,26 @@ extern "C"
 
     for (unsigned int g = 0; g < max_gen; g++)
     {
-      for (unsigned int i = 0; i < offsprings; i++)
+      chromosomes[0] = best_chromosome;
+      fitness[0] = best_fitness;
+
+      for (unsigned int i = 1; i < offsprings; i++)
       {
         self->set(best_chromosome);
-        self->mutate_active(i + 1);
+        self->mutate_active(i);
 
         double fit = get_fitness();
 
         fitness[i] = fit;
         chromosomes[i] = self->get();
+      }
 
-        if ((fitness[i] <= best_fitness) && (fitness[i] != best_fitness))
+      for (unsigned int i = 1; i < offsprings; i++)
+      {
+        if (fitness[i] <= best_fitness)
         {
           best_chromosome = chromosomes[i];
           best_fitness = fitness[i];
-          self->set(best_chromosome);
         };
       };
 
