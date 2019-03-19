@@ -1,11 +1,11 @@
-import { setInHEAP, decoder, encodeStringArray } from './helpers';
+import { setInHEAP, decoder, encodeStringArray } from './helpers'
 
 function randomSeed() {
-  return Math.round(Math.random() * 10000);
+  return Math.round(Math.random() * 10000)
 }
 
 export default function ExpressionInitialiser({ memory, exports }) {
-  const { U8, U32, F64 } = memory;
+  const { U8, U32, F64 } = memory
   const {
     stackSave,
     stackAlloc,
@@ -19,7 +19,7 @@ export default function ExpressionInitialiser({ memory, exports }) {
     _embind_expression_destroy,
     _embind_delete_double_array,
     _embind_delete_string,
-  } = exports;
+  } = exports
 
   return class Expression {
     constructor(
@@ -32,7 +32,7 @@ export default function ExpressionInitialiser({ memory, exports }) {
       kernelSet,
       seed = randomSeed
     ) {
-      const calculatedSeed = typeof seed === 'function' ? seed() : seed;
+      const calculatedSeed = typeof seed === 'function' ? seed() : seed
 
       const pointer = _embind_expression_0(
         inputs,
@@ -43,7 +43,7 @@ export default function ExpressionInitialiser({ memory, exports }) {
         arity,
         kernelSet.pointer,
         calculatedSeed
-      );
+      )
 
       Object.defineProperties(this, {
         pointer: { value: pointer },
@@ -54,112 +54,112 @@ export default function ExpressionInitialiser({ memory, exports }) {
         levelsBack: { value: levelsBack },
         arity: { value: arity },
         seed: { value: calculatedSeed },
-      });
+      })
     }
 
     getChromosome() {
-      const stackStart = stackSave();
+      const stackStart = stackSave()
 
-      const lengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT);
+      const lengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT)
 
-      const arrayPointer = _embind_expression_get(this.pointer, lengthPointer);
+      const arrayPointer = _embind_expression_get(this.pointer, lengthPointer)
 
       const chromosome = new Uint32Array(
         U32.buffer,
         arrayPointer,
         U32[lengthPointer / U32.BYTES_PER_ELEMENT]
-      );
+      )
 
-      _embind_delete_uint32_array(arrayPointer);
+      _embind_delete_uint32_array(arrayPointer)
 
-      stackRestore(stackStart);
-      return Array.from(chromosome);
+      stackRestore(stackStart)
+      return Array.from(chromosome)
     }
 
     setChromosome(chromosome) {
-      const stackStart = stackSave();
+      const stackStart = stackSave()
 
       if (!Array.isArray(chromosome)) {
-        throw 'chromosome is not an array';
+        throw 'chromosome is not an array'
       }
 
       if (!chromosome.every(i => typeof i === 'number')) {
-        throw 'Every entry of chromosome must be a number';
+        throw 'Every entry of chromosome must be a number'
       }
 
       if (!chromosome.every(i => i >= 0)) {
-        throw 'Every entry of chromosome must not be negative';
+        throw 'Every entry of chromosome must not be negative'
       }
 
-      const intChromosome = new Uint32Array(chromosome);
-      const chromosomePointer = stackAlloc(intChromosome.byteLength);
+      const intChromosome = new Uint32Array(chromosome)
+      const chromosomePointer = stackAlloc(intChromosome.byteLength)
 
-      setInHEAP(U32, intChromosome, chromosomePointer);
+      setInHEAP(U32, intChromosome, chromosomePointer)
 
       _embind_expression_set(
         this.pointer,
         chromosomePointer,
         intChromosome.length
-      );
+      )
 
-      stackRestore(stackStart);
+      stackRestore(stackStart)
     }
 
     getResult(inputArray) {
       if (!Array.isArray(inputArray)) {
-        throw 'inputArray is not an array';
+        throw 'inputArray is not an array'
       }
 
       if (!inputArray.every(i => typeof i === 'number')) {
-        throw 'Every entry of inputArray must be a number';
+        throw 'Every entry of inputArray must be a number'
       }
 
-      const stackStart = stackSave();
+      const stackStart = stackSave()
 
-      const inputArrayF64 = new Float64Array(inputArray);
-      const inputPointer = stackAlloc(inputArrayF64.byteLength);
-      setInHEAP(F64, inputArrayF64, inputPointer);
+      const inputArrayF64 = new Float64Array(inputArray)
+      const inputPointer = stackAlloc(inputArrayF64.byteLength)
+      setInHEAP(F64, inputArrayF64, inputPointer)
 
-      const resultLengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT);
+      const resultLengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT)
 
       const resultPointer = _embind_expression_call_double(
         this.pointer,
         inputPointer,
         inputArray.length,
         resultLengthPointer
-      );
+      )
 
       const resultLength =
-        U32[resultLengthPointer / Uint32Array.BYTES_PER_ELEMENT];
+        U32[resultLengthPointer / Uint32Array.BYTES_PER_ELEMENT]
 
-      const results = new Float64Array(F64.buffer, resultPointer, resultLength);
+      const results = new Float64Array(F64.buffer, resultPointer, resultLength)
 
-      _embind_delete_double_array(resultPointer);
-      stackRestore(stackStart);
+      _embind_delete_double_array(resultPointer)
+      stackRestore(stackStart)
 
-      return Array.from(results);
+      return Array.from(results)
     }
 
     getEquation(inputArray) {
       if (!Array.isArray(inputArray)) {
-        throw 'inputArray is not an array';
+        throw 'inputArray is not an array'
       }
 
       if (!inputArray.every(i => typeof i === 'string')) {
-        throw 'Every entry of inputArray must be a string';
+        throw 'Every entry of inputArray must be a string'
       }
 
-      const stackStart = stackSave();
+      const stackStart = stackSave()
 
-      const encoded = encodeStringArray(inputArray);
+      const encoded = encodeStringArray(inputArray)
 
-      const stringsPointer = stackAlloc(encoded.strings.byteLength);
-      setInHEAP(U8, encoded.strings, stringsPointer);
+      const stringsPointer = stackAlloc(encoded.strings.byteLength)
+      setInHEAP(U8, encoded.strings, stringsPointer)
 
-      const lengthsPointer = stackAlloc(encoded.lengths.byteLength);
-      setInHEAP(U32, encoded.lengths, lengthsPointer);
+      const lengthsPointer = stackAlloc(encoded.lengths.byteLength)
+      setInHEAP(U32, encoded.lengths, lengthsPointer)
 
-      const resultLengthPointer = stackAlloc(Uint16Array.BYTES_PER_ELEMENT);
+      const resultLengthPointer = stackAlloc(Uint16Array.BYTES_PER_ELEMENT)
 
       const resultPointer = _embind_expression_call_string(
         this.pointer,
@@ -167,22 +167,22 @@ export default function ExpressionInitialiser({ memory, exports }) {
         lengthsPointer,
         inputArray.length,
         resultLengthPointer
-      );
+      )
 
       const resultLength =
-        U32[resultLengthPointer / Uint32Array.BYTES_PER_ELEMENT];
+        U32[resultLengthPointer / Uint32Array.BYTES_PER_ELEMENT]
       const resultIntArray = new Uint8Array(
         U8.buffer,
         resultPointer,
         resultLength
-      );
+      )
 
-      const result = decoder.decode(resultIntArray);
+      const result = decoder.decode(resultIntArray)
 
-      _embind_delete_string(resultPointer);
-      stackRestore(stackStart);
+      _embind_delete_string(resultPointer)
+      stackRestore(stackStart)
 
-      return result;
+      return result
     }
 
     // // Gets the idx of the active genes in the current chromosome(numbering is from 0)
@@ -229,7 +229,7 @@ export default function ExpressionInitialiser({ memory, exports }) {
     // setFunction(nodeIndexes, kernelIds) {}
 
     destroy() {
-      _embind_expression_destroy(this.pointer);
+      _embind_expression_destroy(this.pointer)
     }
-  };
+  }
 }

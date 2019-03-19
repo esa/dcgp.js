@@ -1,7 +1,7 @@
-import { setInHEAP, encodeStringArray, decoder } from './helpers';
+import { setInHEAP, encodeStringArray, decoder } from './helpers'
 
 export default function KernelInitialiser({ memory, exports }) {
-  const { U8, U32, F64 } = memory;
+  const { U8, U32, F64 } = memory
   const {
     stackSave,
     stackAlloc,
@@ -11,30 +11,30 @@ export default function KernelInitialiser({ memory, exports }) {
     _embind_kernel_call_double,
     _embind_kernel_call_string,
     _embind_kernel_destroy,
-  } = exports;
+  } = exports
 
   return class Kernel {
     constructor(operatorFunction, stringFunction, name, pointer = null) {
-      const stackStart = stackSave();
+      const stackStart = stackSave()
 
       if (pointer) {
-        Object.defineProperty(this, 'pointer', { value: pointer });
+        Object.defineProperty(this, 'pointer', { value: pointer })
 
-        const lengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT);
+        const lengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT)
 
-        const namePointer = _embind_kernel_name(this.pointer, lengthPointer);
+        const namePointer = _embind_kernel_name(this.pointer, lengthPointer)
 
-        const nameLength = U32[lengthPointer / Uint32Array.BYTES_PER_ELEMENT];
+        const nameLength = U32[lengthPointer / Uint32Array.BYTES_PER_ELEMENT]
 
-        const nameArray = new Uint8Array(U8.buffer, namePointer, nameLength);
+        const nameArray = new Uint8Array(U8.buffer, namePointer, nameLength)
 
-        const retrievedName = decoder.decode(nameArray);
-        Object.defineProperty(this, 'name', { value: retrievedName });
+        const retrievedName = decoder.decode(nameArray)
+        Object.defineProperty(this, 'name', { value: retrievedName })
 
-        _embind_delete_string(namePointer);
+        _embind_delete_string(namePointer)
 
-        stackRestore(stackStart);
-        return;
+        stackRestore(stackStart)
+        return
       }
 
       // When compiling with optimizations (e.g. -O3) this functionality breaks.
@@ -42,7 +42,7 @@ export default function KernelInitialiser({ memory, exports }) {
       // can be used to creat a kernel with a custom JS function.
       throw new Error(
         'Initializing a kernel with JavaScript functions is not supported.'
-      );
+      )
 
       // const wrappedOperationFunc = (arrayPointer, length) => {
       //   const inputArray = new Float64Array(HEAPF64.buffer, arrayPointer, length);
@@ -103,50 +103,50 @@ export default function KernelInitialiser({ memory, exports }) {
 
     getResult(inputArray) {
       if (!Array.isArray(inputArray)) {
-        throw 'inputArray is not an array';
+        throw 'inputArray is not an array'
       }
 
       if (!inputArray.every(i => typeof i === 'number')) {
-        throw 'Every entry of inputArray must be a number';
+        throw 'Every entry of inputArray must be a number'
       }
 
-      const stackStart = stackSave();
+      const stackStart = stackSave()
 
-      const inputArrayF64 = new Float64Array(inputArray);
-      const inputPointer = stackAlloc(inputArrayF64.byteLength);
-      setInHEAP(F64, inputArrayF64, inputPointer);
+      const inputArrayF64 = new Float64Array(inputArray)
+      const inputPointer = stackAlloc(inputArrayF64.byteLength)
+      setInHEAP(F64, inputArrayF64, inputPointer)
 
       const result = _embind_kernel_call_double(
         this.pointer,
         inputPointer,
         inputArray.length
-      );
+      )
 
-      stackRestore(stackStart);
+      stackRestore(stackStart)
 
-      return result;
+      return result
     }
 
     getEquation(inputArray) {
       if (!Array.isArray(inputArray)) {
-        throw 'inputArray is not an array';
+        throw 'inputArray is not an array'
       }
 
       if (!inputArray.every(i => typeof i === 'string')) {
-        throw 'Every entry of inputArray must be a string';
+        throw 'Every entry of inputArray must be a string'
       }
 
-      const stackStart = stackSave();
+      const stackStart = stackSave()
 
-      const encoded = encodeStringArray(inputArray);
+      const encoded = encodeStringArray(inputArray)
 
-      const stringsPointer = stackAlloc(encoded.strings.byteLength);
-      setInHEAP(U8, encoded.strings, stringsPointer);
+      const stringsPointer = stackAlloc(encoded.strings.byteLength)
+      setInHEAP(U8, encoded.strings, stringsPointer)
 
-      const lengthsPointer = stackAlloc(encoded.lengths.byteLength);
-      setInHEAP(U32, encoded.lengths, lengthsPointer);
+      const lengthsPointer = stackAlloc(encoded.lengths.byteLength)
+      setInHEAP(U32, encoded.lengths, lengthsPointer)
 
-      const resultLengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT);
+      const resultLengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT)
 
       const resultPointer = _embind_kernel_call_string(
         this.pointer,
@@ -154,25 +154,25 @@ export default function KernelInitialiser({ memory, exports }) {
         lengthsPointer,
         inputArray.length,
         resultLengthPointer
-      );
+      )
 
       const resultLength =
-        U32[resultLengthPointer / Uint32Array.BYTES_PER_ELEMENT];
+        U32[resultLengthPointer / Uint32Array.BYTES_PER_ELEMENT]
       const resultIntArray = new Uint8Array(
         U8.buffer,
         resultPointer,
         resultLength
-      );
-      const result = decoder.decode(resultIntArray);
+      )
+      const result = decoder.decode(resultIntArray)
 
-      _embind_delete_string(resultPointer);
-      stackRestore(stackStart);
+      _embind_delete_string(resultPointer)
+      stackRestore(stackStart)
 
-      return result;
+      return result
     }
 
     toString() {
-      return this.name;
+      return this.name
     }
 
     destroy() {
@@ -184,7 +184,7 @@ export default function KernelInitialiser({ memory, exports }) {
       //   });
       // }
 
-      _embind_kernel_destroy(this.pointer);
+      _embind_kernel_destroy(this.pointer)
     }
-  };
+  }
 }
