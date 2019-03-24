@@ -34,11 +34,11 @@ async function getModuleAndInstance(fetchInstance, arrayBufferInstance) {
       module = wasmObject.module
       instance = wasmObject.instance
     } else {
-      const body = await fetchInstance
-      const bytes = await body.arrayBuffer()
+      const response = await fetchInstance
+      const bytes = await response.arrayBuffer()
 
       module = await WebAssembly.compile(bytes)
-      instance = await WebAssembly.instantiate(bytes, importObject)
+      instance = await WebAssembly.instantiate(module, importObject)
     }
   } else {
     module = await WebAssembly.compile(arrayBufferInstance)
