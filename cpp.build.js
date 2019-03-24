@@ -1,40 +1,55 @@
 /* eslint-env node */
 /* eslint-disable no-console */
-const execa = require('execa');
-const glob = require('glob');
+const { spawn } = require('child_process')
+const { join } = require('path')
+const { lstatSync, readdirSync } = require('fs')
+const glob = require('glob')
+
+const cwd = process.cwd()
+
+const isDirectory = source => lstatSync(source).isDirectory()
+const getDirectories = source =>
+  readdirSync(source)
+    .map(name => join(source, name))
+    .filter(isDirectory)
+
+const emscriptenPath = join(cwd, 'emsdk', 'emscripten')
+// assume that the emscripten folder contains one folder
+// which is the version
+const emccPath = join(getDirectories(emscriptenPath)[0], 'emcc')
 
 glob('src/cpp/**/*.cpp', null, (error, files) => {
   if (error) {
-    throw new Error(error);
+    throw new Error(error)
   }
-
-  const cwd = process.cwd();
 
   let args = [
     '-o',
     'dcgp.js',
-    `-I${cwd}/dcgp/include/`,
-    `-I${cwd}/audi/include/`,
+    `-I${join(cwd, 'dcgp', 'include')}`,
+    `-I${join(cwd, 'audi', 'include')}`,
     '-std=c++11',
     '-g4',
     '--source-map-base',
     'http://localhost:8080/',
     '-O3',
     '--pre-js',
-    `${cwd}/src/js/pre.js`,
-  ];
+    join(cwd, 'src', 'js', 'pre.js'),
+  ]
 
-  args = files.concat(args);
+  args = files.concat(args)
 
-  execa('emcc', args)
-    .then(({ stdout, stderr }) => {
-      if (stderr) {
-        console.error(stderr);
-      }
+  const emcc = spawn(emccPath, args)
 
-      console.log(stdout);
-    })
-    .catch(error => {
-      throw error;
-    });
-});
+  emcc.stdout.on('data', console.log)
+
+  emcc.stderr.on('data', console.error)
+
+  emcc.on('close', code => {
+    if (code !== 0) {
+      throw new Error('emcc command failed')
+    }
+
+    console.log('emcc command succeded')
+  })
+})
