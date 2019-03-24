@@ -2,10 +2,21 @@
 /* eslint-disable no-console */
 const { spawn } = require('child_process')
 const { join } = require('path')
+const { lstatSync, readdirSync } = require('fs')
 const glob = require('glob')
 
 const cwd = process.cwd()
-const emccPath = join(cwd, 'emsdk', 'emscripten', '1.38.28', 'emcc')
+
+const isDirectory = source => lstatSync(source).isDirectory()
+const getDirectories = source =>
+  readdirSync(source)
+    .map(name => join(source, name))
+    .filter(isDirectory)
+
+const emscriptenPath = join(cwd, 'emsdk', 'emscripten')
+// assume that the emscripten folder contains one folder
+// which is the version
+const emccPath = join(getDirectories(emscriptenPath)[0], 'emcc')
 
 glob('src/cpp/**/*.cpp', null, (error, files) => {
   if (error) {
