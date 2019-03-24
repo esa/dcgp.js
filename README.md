@@ -13,6 +13,25 @@ Install dcgp.js with npm:
 npm install dcgp
 ```
 
+### Usage
+```js
+import { createInstance } from 'dcgp'
+
+const dcgp = await createInstance(fetch('/dcgp.wasm') /* or ArrayBuffer or WebAssembly.Module */);
+const myKernelSet = new dcgp.KernelSet(['sum', 'diff', 'mul', 'pdiv']);
+const myExpression = new dcgp.Expression(2, 1, 2, 6, 5, 2, myKernelSet, 5);
+
+// some simple dataset: y = 2x + 2
+const inputs = [[0, 1], [1, 1], [2, 1], [3, 1], [4, 1]];
+const outputs = [[2], [4], [6], [8], [10]];
+
+const resultObj = dcgp.algorithms.onePlusLambda(myExpression, 5, 50, inputs, outputs);
+
+// Free WebAssembly memory
+myKernelSet.destroy()
+myExpression.destroy()
+```
+
 # Development
 Anyone is welcome to help progress and improve this library. Tasks can be found in the [dcgp.js project](https://github.com/mikeheddes/dcgp.js/projects/1). If your problem/task is not in the tasks, feel free to create a new issue explaining your problem/task.
 
@@ -27,18 +46,10 @@ Anyone is welcome to help progress and improve this library. Tasks can be found 
 ```bash
 git clone https://github.com/mikeheddes/dcgp.js.git
 
-cd dcgp.js/emsdk
-
 # Commands to install emscripten
 # For Windows see the notes: https://emscripten.org/docs/getting_started/downloads.html
-./emsdk install latest
-./emsdk activate latest
-
-# Activate PATH and other environment variables in the current terminal
-# This step needs te be repeated when opening a new shell
-source ./emsdk_env.sh
-
-cd ..
+./emsdk/emsdk install latest
+./emsdk/emsdk activate latest
 
 npm install
 

@@ -61,14 +61,12 @@ jobs:
       - run:
           name: Building artifacts
           command: |
-            source emsdk/emsdk_env.sh
             npm run build:cpp
             npm run build:js
 
       - run:
           name: Store package version
-          command: |
-            echo "v$(npm view dcgp version)" > .circleci/dcgp-version
+          command: echo "v$(cat package.json | jq -r .version)" > .circleci/dcgp-version
 
       - store_artifacts:
           path: lib
