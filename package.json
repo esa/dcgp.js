@@ -1,6 +1,6 @@
 {
   "name": "dcgp",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "JavaScript bindings of dcgp compiled to WebAssembly",
   "main": "lib/dcgp.umd.js",
   "module": "lib/dcgp.es.js",
@@ -37,7 +37,7 @@
     "eslint-plugin-prettier": "^3.0.1",
     "glob": "^7.1.3",
     "http-server": "^0.11.1",
-    "jest": "^24.1.0",
+    "jest": "^24.5.0",
     "prettier": "^1.16.4",
     "rollup": "^1.3.3",
     "rollup-plugin-babel": "^4.3.2",

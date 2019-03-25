@@ -177,12 +177,16 @@ export default function ExpressionInitialiser({ memory, exports }) {
         resultLength
       )
 
-      const result = decoder.decode(resultIntArray)
+      const concatedResults = decoder.decode(resultIntArray)
 
       _embind_delete_string(resultPointer)
       stackRestore(stackStart)
 
-      return result
+      // the equations are joint with an NULL byte
+      // split the string and remove the last item which is empty
+      const results = concatedResults.split('\0').slice(0, -1)
+
+      return results
     }
 
     // // Gets the idx of the active genes in the current chromosome(numbering is from 0)
