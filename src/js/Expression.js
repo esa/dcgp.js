@@ -64,16 +64,18 @@ export default function ExpressionInitialiser({ memory, exports }) {
 
       const arrayPointer = _embind_expression_get(this.pointer, lengthPointer)
 
-      const chromosome = new Uint32Array(
+      const chromosomeInt = new Uint32Array(
         U32.buffer,
         arrayPointer,
         U32[lengthPointer / U32.BYTES_PER_ELEMENT]
       )
 
+      const chromosome = Array.from(chromosomeInt)
+
       _embind_delete_uint32_array(arrayPointer)
 
       stackRestore(stackStart)
-      return Array.from(chromosome)
+      return chromosome
     }
 
     setChromosome(chromosome) {
