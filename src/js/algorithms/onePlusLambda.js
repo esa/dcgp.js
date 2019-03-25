@@ -1,13 +1,13 @@
-import { setInHEAP, flatten } from '../helpers';
+import { setInHEAP, flatten } from '../helpers'
 
 export default function onePlusLambdaInitialiser({ memory, exports }) {
-  const { F64 } = memory;
+  const { F64 } = memory
   const {
     stackSave,
     stackAlloc,
     stackRestore,
     _embind_one_plus_lambda,
-  } = exports;
+  } = exports
 
   return function onePlusLambda(
     expression,
@@ -20,10 +20,10 @@ export default function onePlusLambdaInitialiser({ memory, exports }) {
       throw new Error(
         'input and output must be an array of the same length. ' +
           `Lengths ${inputs.length} and ${outputs.length} found.`
-      );
+      )
     }
 
-    const stackStart = stackSave();
+    const stackStart = stackSave()
 
     const data = {
       inputs: {
@@ -32,19 +32,19 @@ export default function onePlusLambdaInitialiser({ memory, exports }) {
       outputs: {
         raw: outputs,
       },
-    };
+    }
 
     Object.keys(data).forEach(key => {
-      const flat = flatten(data[key].raw);
+      const flat = flatten(data[key].raw)
 
-      const flatDouble = new Float64Array(flat);
+      const flatDouble = new Float64Array(flat)
 
-      const pointer = stackAlloc(flatDouble.byteLength);
+      const pointer = stackAlloc(flatDouble.byteLength)
 
-      setInHEAP(F64, flatDouble, pointer);
+      setInHEAP(F64, flatDouble, pointer)
 
-      data[key].pointer = pointer;
-    });
+      data[key].pointer = pointer
+    })
 
     const loss = _embind_one_plus_lambda(
       expression.pointer,
@@ -53,13 +53,13 @@ export default function onePlusLambdaInitialiser({ memory, exports }) {
       data.inputs.pointer,
       data.outputs.pointer,
       inputs.length
-    );
-    const chromosome = expression.getChromosome();
+    )
+    const chromosome = expression.getChromosome()
 
-    stackRestore(stackStart);
+    stackRestore(stackStart)
     return {
       loss,
       chromosome,
-    };
-  };
+    }
+  }
 }

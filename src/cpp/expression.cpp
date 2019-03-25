@@ -22,12 +22,9 @@ extern "C"
 
     *length = tmp_chromosome.size();
 
-    unsigned int *chromosome = new unsigned int[tmp_chromosome.size()];
+    unsigned *chromosome = new unsigned[*length];
 
-    for (size_t i = 0; i < tmp_chromosome.size(); i++)
-    {
-      chromosome[i] = tmp_chromosome[i];
-    }
+    memcpy(chromosome, &tmp_chromosome[0], *length * sizeof(unsigned));
 
     return chromosome;
   }
