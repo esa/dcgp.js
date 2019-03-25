@@ -10,15 +10,15 @@ using namespace dcgp;
 extern "C"
 {
   // empty constructor
-  expression<double> *EMSCRIPTEN_KEEPALIVE embind_expression_0(const unsigned int inputs, const unsigned int outputs, const unsigned int rows, const unsigned int columns, const unsigned int levels_back, const unsigned int arity, const kernel_set<double> *const kernels, const double seed)
+  expression<double> *EMSCRIPTEN_KEEPALIVE embind_expression_0(const unsigned inputs, const unsigned outputs, const unsigned rows, const unsigned columns, const unsigned levels_back, const unsigned arity, const kernel_set<double> *const kernels, const double seed)
   {
     return new expression<double>(inputs, outputs, rows, columns, levels_back, arity, (*kernels)(), seed);
   }
 
   // get chromosome
-  unsigned int *EMSCRIPTEN_KEEPALIVE embind_expression_get(const expression<double> *const self, unsigned int *const length)
+  unsigned int *EMSCRIPTEN_KEEPALIVE embind_expression_get(const expression<double> *const self, unsigned *const length)
   {
-    const std::vector<unsigned int> tmp_chromosome = self->get();
+    const std::vector<unsigned> tmp_chromosome = self->get();
 
     *length = tmp_chromosome.size();
 
@@ -30,15 +30,15 @@ extern "C"
   }
 
   // set chromosome
-  void EMSCRIPTEN_KEEPALIVE embind_expression_set(expression<double> *const self, const unsigned int *const chromosome, const unsigned int length)
+  void EMSCRIPTEN_KEEPALIVE embind_expression_set(expression<double> *const self, const unsigned *const chromosome, const unsigned length)
   {
-    std::vector<unsigned int> chromosome_vect(chromosome, chromosome + length);
+    std::vector<unsigned> chromosome_vect(chromosome, chromosome + length);
 
     self->set(chromosome_vect);
   }
 
   // compute and return the result of this kernel
-  double * EMSCRIPTEN_KEEPALIVE embind_expression_call_double(const expression<double> *const self, const double *const input_numbers, unsigned int len, unsigned int * const out_len)
+  double * EMSCRIPTEN_KEEPALIVE embind_expression_call_double(const expression<double> *const self, const double *const input_numbers, unsigned len, unsigned * const out_len)
   {
     std::vector<double> input_vector(input_numbers, input_numbers + len);
 
@@ -53,13 +53,13 @@ extern "C"
   }
 
   // set the equation in an array
-  char *EMSCRIPTEN_KEEPALIVE embind_expression_call_string(const expression<double> *const self, const char *const input_chars, const unsigned int *const lengths, unsigned int len, unsigned int *const out_length)
+  char *EMSCRIPTEN_KEEPALIVE embind_expression_call_string(const expression<double> *const self, const char *const input_chars, const unsigned *const lengths, unsigned len, unsigned *const out_length)
   {
     std::vector<std::string> input_strings;
     input_strings.reserve(len);
 
     {
-      unsigned int shifted(0);
+      unsigned shifted(0);
 
       for (size_t i = 0; i < len; i++)
       {
@@ -75,8 +75,8 @@ extern "C"
 
     std::vector<std::string> tmp_result = (*self)(input_strings);
 
-    unsigned int len_results = tmp_result.size();
-    unsigned int total_length(len_results);
+    unsigned len_results = tmp_result.size();
+    unsigned total_length(len_results);
 
     for (size_t i = 0; i < len_results; i++)
     {
@@ -86,7 +86,7 @@ extern "C"
     char *result = new char[total_length];
     *out_length = total_length;
 
-    unsigned int shift(0);
+    unsigned shift(0);
     for (size_t i = 0; i < len_results; i++)
     {
       strcpy(&result[shift + i], tmp_result[i].c_str());

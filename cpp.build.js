@@ -41,9 +41,13 @@ glob('src/cpp/**/*.cpp', null, (error, files) => {
 
   const emcc = spawn(emccPath, args)
 
-  emcc.stdout.on('data', console.log)
+  emcc.stdout.on('data', data => {
+    console.log(data.toString('utf8'))
+  })
 
-  emcc.stderr.on('data', console.error)
+  emcc.stderr.on('data', data => {
+    console.error(data.toString('utf8'))
+  })
 
   emcc.on('close', code => {
     if (code !== 0) {
