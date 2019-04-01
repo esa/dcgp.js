@@ -4,6 +4,12 @@
 [submodule "audi"]
 	path = vendor/audi
 	url = https://github.com/darioizzo/audi.git
-[submodule "vendor/piranha"]
+[submodule "piranha"]
 	path = vendor/piranha
 	url = https://github.com/bluescarni/piranha.git
+[submodule "emscripten"]
+	path = images/emscripten
+	url = https://github.com/mikeheddes/emscripten-32bit-image.git
+[submodule "dependencies"]
+	path = images/dependencies
+	url = https://github.com/mikeheddes/dcgp.js-dependencies-image.git
