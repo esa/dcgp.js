@@ -1,0 +1,25 @@
+--- PiranhaPlatformSettings.cmake.original	2019-03-31 19:43:05.000000000 +0200
++++ PiranhaPlatformSettings.cmake	2019-03-31 19:44:08.000000000 +0200
+@@ -39,21 +39,7 @@
+ ENDIF()
+ 
+ IF(UNIX OR MINGW)
+-	# NOTE: here it seems like the CFLAGS for the TRY_COMPILE are inherited from the ones already defined,
+-	# so no need to define them explicitly.
+-	TRY_COMPILE(PIRANHA_IGNORE_LIBM ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/test_libm.cpp")
+-	IF(NOT PIRANHA_IGNORE_LIBM)
+-		MESSAGE(STATUS "Explicit linking to the math library is needed.")
+-		FIND_LIBRARY(SYSTEM_M_LIBRARY NAMES m)
+-		IF(SYSTEM_M_LIBRARY)
+-			SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${SYSTEM_M_LIBRARY})
+-			MESSAGE(STATUS "Math library found: ${SYSTEM_M_LIBRARY}")
+-		ELSE()
+-			MESSAGE(FATAL_ERROR "Math library not found, aborting.")
+-		ENDIF()
+-	ELSE()
+-		MESSAGE(STATUS "Explicit linking to the math library is not needed.")
+-	ENDIF()
++  MESSAGE(STATUS "Explicit linking to the math library is not needed.")
+ ENDIF()
+ 
+ # OS X setup.

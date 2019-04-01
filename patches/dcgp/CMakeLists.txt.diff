@@ -1,0 +1,16 @@
+--- CMakeLists.txt.original	2019-03-31 11:53:50.000000000 +0200
++++ CMakeLists.txt	2019-03-31 11:52:16.000000000 +0200
+@@ -144,13 +144,6 @@
+     message(STATUS "MPFR library found.")
+     message(STATUS "MPFR include dir is: ${MPFR_INCLUDE_DIR}")
+     message(STATUS "MPFR library is: ${MPFR_LIBRARIES}")
+-    message(STATUS "Checking MPFR version.")
+-    try_compile(MPFR_VERSION_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/mpfr_check_version.cpp"
+-        CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${MPFR_INCLUDE_DIR};${GMP_INCLUDE_DIR}")
+-    if(NOT MPFR_VERSION_CHECK)
+-        message(FATAL_ERROR "Unsupported MPFR version, please upgrade.")
+-    endif()
+-    message(STATUS "MPFR version is ok.")
+ 
+     # Audi setup
+     find_package(Audi REQUIRED)

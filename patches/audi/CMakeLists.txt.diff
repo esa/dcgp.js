@@ -1,0 +1,65 @@
+--- CMakeLists.txt.original	2019-03-31 11:41:14.000000000 +0200
++++ CMakeLists.txt	2019-03-31 11:43:47.000000000 +0200
+@@ -121,7 +121,7 @@
+     message(STATUS "Eigen include directory: ${EIGEN3_INCLUDE_DIR}")
+     message(STATUS "Eigen version detected: ${EIGEN3_VERSION}")
+     include_directories(${EIGEN3_INCLUDE_DIR})
+-    
++
+     # Piranha setup.
+     find_package(Piranha REQUIRED)
+     message(STATUS "Piranha library found.")
+@@ -133,19 +133,12 @@
+     message(STATUS "GMP library found.")
+     message(STATUS "GMP include dir is: ${GMP_INCLUDE_DIR}")
+     message(STATUS "GMP library is: ${GMP_LIBRARIES}")
+-    
++
+     # MPFR setup.
+     FIND_PACKAGE(MPFR REQUIRED)
+     message(STATUS "MPFR library found.")
+     message(STATUS "MPFR include dir is: ${MPFR_INCLUDE_DIR}")
+     message(STATUS "MPFR library is: ${MPFR_LIBRARIES}")
+-    message(STATUS "Checking MPFR version.")
+-    try_compile(MPFR_VERSION_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/mpfr_check_version.cpp"
+-        CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${MPFR_INCLUDE_DIR};${GMP_INCLUDE_DIR}")
+-    if(NOT MPFR_VERSION_CHECK)
+-        message(FATAL_ERROR "Unsupported MPFR version, please upgrade.")
+-    endif()
+-    message(STATUS "MPFR version is ok.")
+ 
+     if(AUDI_WITH_MPPP)
+         # MP++ SETUP
+@@ -155,12 +148,12 @@
+ 
+     # Setup of the header-only audi library.
+     add_library(audi INTERFACE)
+-    target_link_libraries(audi INTERFACE Threads::Threads Boost::boost Boost::serialization)    
++    target_link_libraries(audi INTERFACE Threads::Threads Boost::boost Boost::serialization)
+     target_link_libraries(audi INTERFACE Eigen3::eigen3 MPFR::MPFR GMP::GMP)
+     if(AUDI_WITH_MPPP)
+         target_link_libraries(audi INTERFACE mp++::mp++)
+     endif()
+-    
++
+     # This sets up the include directory to be different if we build
+     target_include_directories(audi INTERFACE
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+@@ -169,7 +162,7 @@
+ 
+     # These lines are temporary with piranha v0.10, will be simplified when this is updated
+     target_include_directories(audi INTERFACE ${Piranha_INCLUDE_DIR})
+-   
++
+     # Builds the main file
+     IF(AUDI_BUILD_MAIN)
+         add_executable(main main.cpp)
+@@ -214,7 +207,7 @@
+ 
+ if(AUDI_BUILD_PYAUDI)
+     # Configure version
+-    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/pyaudi/_version.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/pyaudi/_version.py" @ONLY)    
++    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/pyaudi/_version.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/pyaudi/_version.py" @ONLY)
+     # Add the pyaudi subdirectory.
+     add_subdirectory("${CMAKE_SOURCE_DIR}/pyaudi")
+     if(MINGW)

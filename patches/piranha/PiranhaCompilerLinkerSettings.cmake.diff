@@ -1,0 +1,14 @@
+--- PiranhaCompilerLinkerSettings.cmake.original	2019-03-31 12:07:43.000000000 +0200
++++ PiranhaCompilerLinkerSettings.cmake	2019-03-31 12:07:59.000000000 +0200
+@@ -74,11 +74,6 @@
+ endif()
+ 
+ if(YACMA_COMPILER_IS_CLANGXX)
+-	message(STATUS "Clang compiler detected, checking version.")
+-	try_compile(PIRANHA_CLANG_VERSION_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/clang_check_version.cpp")
+-	if(NOT PIRANHA_CLANG_VERSION_CHECK)
+-		message(FATAL_ERROR "Unsupported Clang version, please upgrade your compiler.")
+-	endif()
+ 	message(STATUS "Clang version is ok.")
+ 	# Set the standard flag.
+ 	PIRANHA_SET_CPP_STD_FLAG()
