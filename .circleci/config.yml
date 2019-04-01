@@ -1,30 +1,12 @@
 version: 2
 jobs:
 
-  install-and-build:
+  build-cpp:
     docker:
-      - image: circleci/node:10
+      - image: mikeheddes/dcgp-deps
     working_directory: ~/repo
     steps:
       - checkout
-
-      - run:
-          name: "Pulling submodules"
-          command: |
-            git submodule init
-            git submodule update --remote
-
-      - run:
-          name: Store emsdk commit hash
-          command: |
-            cd emsdk
-            git rev-parse HEAD > ../.circleci/emsdk-hash
-
-      - restore_cache:
-          name: Restoring emsdk install from cache
-          keys:
-          - v1-emsdk-{{ checksum ".circleci/emsdk-hash" }}
-          - v1-emsdk-
 
       - restore_cache:
           name: Restoring NPM packages from cache
@@ -33,20 +15,8 @@ jobs:
           - v1-npm-
 
       - run:
-          name: Install Emscripten
-          command: emsdk/emsdk install latest
-
-      - run:
           name: Install packages
           command: npm install
-
-      - save_cache:
-          name: Saving emsdk install to cache
-          paths:
-            - emsdk/clang
-            - emsdk/emscripten
-            - emsdk/node
-          key: v1-emsdk-{{ checksum ".circleci/emsdk-hash" }}
 
       - save_cache:
           name: Saving NPM packages to cache
@@ -55,14 +25,43 @@ jobs:
           key: v1-npm-{{ checksum "package.json" }}
 
       - run:
-          name: Activate Emscripten
-          command: emsdk/emsdk activate latest
+          name: Building artifacts
+          command: npm run build:cpp
+
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - dcgp.*
+
+  build-js:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: ~/repo
+
+      - restore_cache:
+          name: Restoring NPM packages from cache
+          keys:
+          - v1-npm-{{ checksum "package.json" }}
+          - v1-npm-
+
+      - run:
+          name: Install packages
+          command: npm install
+
+      - save_cache:
+          name: Saving NPM packages to cache
+          paths:
+            - node_modules
+          key: v1-npm-{{ checksum "package.json" }}
 
       - run:
           name: Building artifacts
-          command: |
-            npm run build:cpp
-            npm run build:js
+          command: npm run build:js
 
       - run:
           name: Store package version
@@ -76,8 +75,6 @@ jobs:
           paths:
             - lib
             - .circleci/dcgp-version
-            - dcgp.*
-            - node_modules
 
   checks:
     docker:
@@ -88,6 +85,22 @@ jobs:
 
       - attach_workspace:
           at: ~/repo
+
+      - restore_cache:
+          name: Restoring NPM packages from cache
+          keys:
+          - v1-npm-{{ checksum "package.json" }}
+          - v1-npm-
+
+      - run:
+          name: Install packages
+          command: npm install
+
+      - save_cache:
+          name: Saving NPM packages to cache
+          paths:
+            - node_modules
+          key: v1-npm-{{ checksum "package.json" }}
 
       - run:
           name: Linting code
@@ -115,7 +128,6 @@ jobs:
           name: Publishing package on NPM
           command: npm publish
 
-
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
@@ -133,7 +145,7 @@ jobs:
             -r ${CIRCLE_PROJECT_REPONAME} \
             -c ${CIRCLE_SHA1} \
             -delete \
-            ${VERSION} ./dcgp.wasm
+            ${VERSION} ./lib/dcgp.wasm
 
 
 workflows:
@@ -141,20 +153,23 @@ workflows:
   # The main workflow tests PR's and deploys master
   main:
     jobs:
-      - install-and-build
+      - build-cpp
+      - build-js:
+          requires:
+            - build-cpp
       - checks:
           requires:
-            - install-and-build
+            - build-js
       - publish-npm-package:
           requires:
-            - install-and-build
+            - build-js
             - checks
           filters:
             branches:
               only: master
       - publish-github-release:
           requires:
-            - install-and-build
+            - build-js
             - checks
           filters:
             branches:

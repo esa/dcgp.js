@@ -13,7 +13,7 @@
     "test:ci": "jest src/",
     "lint": "eslint src/**/*.js",
     "build": "npm run build:cpp && npm run build:js",
-    "build:cpp": "node cpp.build.js",
+    "build:cpp": "node build.cpp.js",
     "build:js": "rollup -c"
   },
   "keywords": [
