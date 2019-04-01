@@ -1,9 +1,3 @@
-[submodule "dcgp"]
-	path = vendor/dcgp
-	url = https://github.com/darioizzo/dcgp.git
-[submodule "audi"]
-	path = vendor/audi
-	url = https://github.com/darioizzo/audi.git
 [submodule "piranha"]
 	path = vendor/piranha
 	url = https://github.com/bluescarni/piranha.git
@@ -13,3 +7,9 @@
 [submodule "dependencies"]
 	path = images/dependencies
 	url = https://github.com/mikeheddes/dcgp.js-dependencies-image.git
+[submodule "vendor/audi"]
+	path = vendor/audi
+	url = https://github.com/darioizzo/audi.git
+[submodule "vendor/dcgp"]
+	path = vendor/dcgp
+	url = https://github.com/darioizzo/dcgp.git
