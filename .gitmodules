@@ -1,6 +1,9 @@
 [submodule "dcgp"]
 	path = vendor/dcgp
-	url = https://github.com/mikeheddes/dcgp.git
+	url = https://github.com/darioizzo/dcgp.git
 [submodule "audi"]
 	path = vendor/audi
-	url = https://github.com/mikeheddes/audi.git
+	url = https://github.com/darioizzo/audi.git
+[submodule "vendor/piranha"]
+	path = vendor/piranha
+	url = https://github.com/bluescarni/piranha.git
