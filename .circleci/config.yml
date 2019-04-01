@@ -3,7 +3,7 @@ jobs:
 
   build-cpp:
     docker:
-      - image: mikeheddes/dcgp-deps
+      - image: mikeheddes/dcgp.js-dependencies
     working_directory: ~/repo
     steps:
       - checkout
