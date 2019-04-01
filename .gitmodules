@@ -1,9 +1,6 @@
-[submodule "emsdk"]
-	path = emsdk
-	url = https://github.com/emscripten-core/emsdk.git
 [submodule "dcgp"]
-	path = dcgp
+	path = vendor/dcgp
 	url = https://github.com/mikeheddes/dcgp.git
 [submodule "audi"]
-	path = audi
+	path = vendor/audi
 	url = https://github.com/mikeheddes/audi.git
