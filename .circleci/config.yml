@@ -8,6 +8,12 @@ jobs:
     steps:
       - checkout
 
+      - run:
+          name: Installing NPM
+          command: |
+            apt-get -y update
+            apt-get install npm
+
       - restore_cache:
           name: Restoring NPM packages from cache
           keys:
