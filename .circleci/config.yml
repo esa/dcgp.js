@@ -12,7 +12,7 @@ jobs:
           name: Installing NPM
           command: |
             apt-get -y update
-            apt-get install npm
+            apt-get -y -qq install npm
 
       - restore_cache:
           name: Restoring NPM packages from cache
