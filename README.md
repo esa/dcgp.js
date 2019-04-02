@@ -38,6 +38,7 @@ Anyone is welcome to help progress and improve this library. Tasks can be found 
 ## Prerequisite
 - `node.js` >= 8
 - `npm`
+- Docker
 
 ## Installation
 
