@@ -8,17 +8,11 @@ jobs:
     steps:
       - checkout
 
-      - run:
-          name: Installing NPM
-          command: |
-            apt-get -y update
-            apt-get -y -qq install npm
-
       - restore_cache:
           name: Restoring NPM packages from cache
           keys:
-          - v1-npm-{{ checksum "package.json" }}
-          - v1-npm-
+          - v32-npm-{{ checksum "package.json" }}
+          - v32-npm-
 
       - run:
           name: Install packages
@@ -28,7 +22,7 @@ jobs:
           name: Saving NPM packages to cache
           paths:
             - node_modules
-          key: v1-npm-{{ checksum "package.json" }}
+          key: v32-npm-{{ checksum "package.json" }}
 
       - run:
           name: Building artifacts
@@ -52,8 +46,8 @@ jobs:
       - restore_cache:
           name: Restoring NPM packages from cache
           keys:
-          - v1-npm-{{ checksum "package.json" }}
-          - v1-npm-
+          - v64-npm-{{ checksum "package.json" }}
+          - v64-npm-
 
       - run:
           name: Install packages
@@ -63,7 +57,7 @@ jobs:
           name: Saving NPM packages to cache
           paths:
             - node_modules
-          key: v1-npm-{{ checksum "package.json" }}
+          key: v64-npm-{{ checksum "package.json" }}
 
       - run:
           name: Building artifacts
@@ -95,8 +89,8 @@ jobs:
       - restore_cache:
           name: Restoring NPM packages from cache
           keys:
-          - v1-npm-{{ checksum "package.json" }}
-          - v1-npm-
+          - v64-npm-{{ checksum "package.json" }}
+          - v64-npm-
 
       - run:
           name: Install packages
@@ -106,7 +100,7 @@ jobs:
           name: Saving NPM packages to cache
           paths:
             - node_modules
-          key: v1-npm-{{ checksum "package.json" }}
+          key: v64-npm-{{ checksum "package.json" }}
 
       - run:
           name: Linting code
