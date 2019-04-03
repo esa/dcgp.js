@@ -1,6 +1,6 @@
 {
   "name": "dcgp",
-  "version": "0.4.7",
+  "version": "0.5.0",
   "description": "JavaScript bindings of dcgp compiled to WebAssembly",
   "main": "lib/dcgp.umd.js",
   "module": "lib/dcgp.es.js",
@@ -13,7 +13,7 @@
     "test:ci": "jest src/",
     "lint": "eslint src/**/*.js",
     "build": "npm run build:cpp && npm run build:js",
-    "build:cpp": "node cpp.build.js",
+    "build:cpp": "node build.cpp.js",
     "build:js": "rollup -c"
   },
   "keywords": [

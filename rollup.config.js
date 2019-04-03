@@ -1,35 +1,35 @@
-import babel from 'rollup-plugin-babel';
-import copy from 'rollup-plugin-copy';
-import resolve from 'rollup-plugin-node-resolve';
-import pkg from './package.json';
-import fs from 'fs';
-import path from 'path';
+import babel from 'rollup-plugin-babel'
+import copy from 'rollup-plugin-copy'
+import resolve from 'rollup-plugin-node-resolve'
+import pkg from './package.json'
+import fs from 'fs'
+import path from 'path'
 
 function emptyDir(outputDir) {
   return {
     name: 'empty-lib-dir',
     buildStart() {
-      const absolutePath = path.resolve(outputDir);
+      const absolutePath = path.resolve(outputDir)
 
       return new Promise(resolve => {
-        resolve(fs.statSync(absolutePath));
+        resolve(fs.statSync(absolutePath))
       })
         .then(stats => {
           if (!stats.isDirectory) {
-            Promise.reject('outputDir must be a directory');
+            Promise.reject('outputDir must be a directory')
           }
 
-          const files = fs.readdirSync(absolutePath);
+          const files = fs.readdirSync(absolutePath)
 
           for (let index = 0; index < files.length; index++) {
-            fs.unlinkSync(path.join(absolutePath, files[index]));
+            fs.unlinkSync(path.join(absolutePath, files[index]))
           }
 
-          return files;
+          return files
         })
-        .catch(() => {});
+        .catch(() => {})
     },
-  };
+  }
 }
 
 export default {
@@ -44,7 +44,6 @@ export default {
     babel(),
     copy({
       'dcgp.wasm': 'lib/dcgp.wasm',
-      'dcgp.wasm.map': 'lib/dcgp.wasm.map',
       'src/index.html': 'lib/index.html',
     }),
   ],
@@ -60,4 +59,4 @@ export default {
       file: 'lib/dcgp.es.js',
     },
   ],
-};
+}
