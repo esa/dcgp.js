@@ -10,3 +10,4 @@ dcgp.js
 dcgp.wasm
 dcgp.wasm.map
 dcgp.wast
+dcgp.bc

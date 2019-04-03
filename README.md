@@ -27,7 +27,7 @@ const outputs = [[2], [4], [6], [8], [10]];
 
 const resultObj = dcgp.algorithms.onePlusLambda(myExpression, 5, 50, inputs, outputs);
 
-// Free WebAssembly memory
+// Free memory 
 myKernelSet.destroy()
 myExpression.destroy()
 ```
@@ -36,9 +36,7 @@ myExpression.destroy()
 Anyone is welcome to help progress and improve this library. Tasks can be found in the [dcgp.js project](https://github.com/mikeheddes/dcgp.js/projects/1). If your problem/task is not in the tasks, feel free to create a new issue explaining your problem/task.
 
 ## Prerequisite
-- `node.js` >= 8
-- `npm`
-- Docker
+- docker
 
 ## Installation
 
@@ -47,12 +45,24 @@ Anyone is welcome to help progress and improve this library. Tasks can be found 
 ```bash
 git clone https://github.com/mikeheddes/dcgp.js.git
 
-# Commands to install emscripten
-# For Windows see the notes: https://emscripten.org/docs/getting_started/downloads.html
-./emsdk/emsdk install latest
-./emsdk/emsdk activate latest
+cd dcgp.js
 
+# Start the 32bit ubuntu image with all dcgp.js' dependencies installed
+# Note: make sure the docker daemon is running
+docker run -it -v "$(pwd):/root/repo" -w /root/repo mikeheddes/dcgp.js-dependencies bash
+
+# Command for windows
+# docker run -it -v "%CD%:/root/repo" -w /root/repo mikeheddes/dcgp.js-dependencies bash
+
+# A bash environment will open
 npm install
 
 npm run build
+
+# To test the generated bundle in the browser run the following command
+npx http-server lib
+
+# To leave the bash environment run
+exit
+
 ```
