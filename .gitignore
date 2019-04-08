@@ -6,6 +6,10 @@ yarn-debug.log*
 yarn-error.log*
 
 lib/
+tmp/
+out/
+cache/
+*.lock
 dcgp.js
 dcgp.wasm
 dcgp.wasm.map
