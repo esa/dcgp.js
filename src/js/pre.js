@@ -1,4 +1,5 @@
-/* global asm2wasmImports, removeRunDependency, addRunDependency, Module */
+// eslint-disable-next-line no-unused-vars
+/* global asm2wasmImports, removeRunDependency, addRunDependency, Module, runDependencyWatcher */
 
 let importObject
 
@@ -15,7 +16,9 @@ createWasm = function createWasmOverride(env) {
     'global.Math': Math,
     asm2wasm: asm2wasmImports,
   }
-
+  // set to false to remove initialization warning
+  // eslint-disable-next-line no-global-assign
+  runDependencyWatcher = false
   addRunDependency('wasm-instantiate')
 
   return {}
