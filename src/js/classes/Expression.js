@@ -4,11 +4,89 @@ import {
   decodeStringArray,
   encodeStringArray,
   getExportsFactory,
+  flatten2D,
+  transpose2D,
+  grid2D,
 } from '../helpers'
 import { getInstance } from '../initialiser'
 
 function randomSeed() {
   return Math.round(Math.random() * 10000)
+}
+
+function structureEvaluationInputs(type, inputs) {
+  if (Array.isArray(inputs[0])) {
+    if (type === 'gdual_v') {
+      return flatten2D(inputs)
+    } else {
+      return flatten2D(transpose2D(inputs))
+    }
+  }
+
+  return inputs
+}
+
+// TODO: refactor function
+function calculateEvaluation({
+  type,
+  inputs,
+  inputPointer,
+  evaluate,
+  outputs,
+}) {
+  const {
+    exports: { _delete_double_array },
+    memory: { F64 },
+  } = getInstance()
+
+  if (Array.isArray(inputs[0])) {
+    const inputArrayLength = inputs[0].length
+
+    if (type === 'gdual_v') {
+      const resultPointer = evaluate(inputPointer, inputArrayLength)
+
+      const typedResults = new Float64Array(
+        F64.buffer,
+        resultPointer,
+        outputs * inputArrayLength
+      )
+
+      const flatResult = Array.from(typedResults)
+
+      _delete_double_array(resultPointer)
+
+      return grid2D(flatResult, inputArrayLength)
+    } else {
+      const results = []
+      const lengthOfInput = 1
+
+      for (let i = 0; i < inputArrayLength; i++) {
+        const resultPointer = evaluate(
+          inputPointer + i * inputs.length * F64.BYTES_PER_ELEMENT,
+          lengthOfInput
+        )
+
+        const typedResult = new Float64Array(F64.buffer, resultPointer, outputs)
+
+        results.push(Array.from(typedResult))
+
+        _delete_double_array(resultPointer)
+      }
+
+      return transpose2D(results)
+    }
+  } else {
+    const lengthOfInput = 1
+    const resultPointer = evaluate(inputPointer, lengthOfInput)
+
+    const typedResult = new Float64Array(F64.buffer, resultPointer, outputs)
+
+    const results = Array.from(typedResult)
+
+    _delete_double_array(resultPointer)
+
+    return results
+  }
 }
 
 /**
@@ -139,7 +217,7 @@ class Expression {
    * Calculates the result of the expression with `inputs`.
    *
    * @memberof Expression
-   * @param {...number} inputs Input to the expression.
+   * @param {...(number|[number])} inputs Input to the expression.
    * @returns {[number]} The outputs of the expression.
    * @example
    * expression.evalutate(1, 2, 3)
@@ -151,12 +229,12 @@ class Expression {
         `the number of inputs of the expression which is ${this.inputs}`
     }
 
-    if (!inputs.every(i => typeof i === 'number')) {
-      throw 'Every entry of inputs must be a number'
+    if (!inputs.every(i => typeof i === 'number' || Array.isArray(i))) {
+      throw 'Every entry of inputs must be a number or an array with numbers'
     }
 
     const {
-      exports: { stackSave, stackAlloc, stackRestore, _delete_double_array },
+      exports: { stackSave, stackAlloc, stackRestore },
       memory: { F64 },
     } = getInstance()
 
@@ -164,18 +242,23 @@ class Expression {
 
     const stackStart = stackSave()
 
-    const inputArrayF64 = new Float64Array(inputs)
+    const inputArray = structureEvaluationInputs(this.type, inputs)
+
+    const inputArrayF64 = new Float64Array(inputArray)
     const inputPointer = stackAlloc(inputArrayF64.byteLength)
     setInHEAP(F64, inputArrayF64, inputPointer)
 
-    const resultPointer = evaluate(this.pointer, inputPointer, inputs.length)
+    const results = calculateEvaluation({
+      outputs: this.outputs,
+      type: this.type,
+      inputs,
+      inputPointer,
+      evaluate: evaluate.bind(null, this.pointer),
+    })
 
-    const results = new Float64Array(F64.buffer, resultPointer, this.outputs)
-
-    _delete_double_array(resultPointer)
     stackRestore(stackStart)
 
-    return Array.from(results)
+    return results
   }
 
   /**

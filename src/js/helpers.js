@@ -134,17 +134,51 @@ export function setInHEAP(HEAP, typedArray, pointer) {
  * @private
  * @param {[[*]]} array 2 dimensional array with any values.
  * @returns {[*]} Flattend array.
+ * @see https://jsperf.com/flatten-an-array-loop-vs-reduce/2
  */
 export function flatten2D(array) {
   const flat = []
 
-  for (const row of array) {
-    for (const item of row) {
-      flat.push(item)
+  for (let i = 0; i < array.length; i++) {
+    let current = array[i]
+
+    for (let j = 0; j < current.length; j++) {
+      flat.push(current[j])
     }
   }
 
   return flat
+}
+
+/**
+ * @private
+ * @param {[[*]]} array 2 dimensional array with any values.
+ * @returns {[[*]]} Transposed array
+ * @see https://jsperf.com/transpose-2d-array
+ */
+export function transpose2D(array) {
+  return array[0].map((col, i) => array.map(row => row[i]))
+}
+
+/**
+ * @private
+ * @param {[*]} array Array with any values.
+ * @param {number} width The width of the grid.
+ * @returns {[[*]]} Grid
+ */
+export function grid2D(array, width) {
+  if (array.length % width !== 0) {
+    throw 'array length is not dividable by the provided width'
+  }
+
+  const grid = []
+  const columns = array.length / width
+
+  for (let i = 0; i < columns; i++) {
+    grid.push(array.slice(i * width, (i + 1) * width))
+  }
+
+  return grid
 }
 
 /**

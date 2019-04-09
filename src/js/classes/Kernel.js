@@ -4,8 +4,83 @@ import {
   encodeStringArray,
   decodeString,
   getExportsFactory,
+  flatten2D,
+  transpose2D,
 } from '../helpers'
 import { getInstance } from '../initialiser'
+
+function structureEvaluationInputs(type, inputs) {
+  if (Array.isArray(inputs[0])) {
+    if (type === 'gdual_v') {
+      return flatten2D(inputs)
+    } else {
+      return flatten2D(transpose2D(inputs))
+    }
+  }
+
+  return inputs
+}
+
+// TODO: refactor function
+function calculateEvaluation({ type, inputs, inputPointer, evaluate }) {
+  const {
+    exports: { _delete_double_array },
+    memory: { F64 },
+  } = getInstance()
+
+  const outputs = 1
+  const numInputs = inputs.length
+
+  if (Array.isArray(inputs[0])) {
+    const inputArrayLength = inputs[0].length
+
+    if (type === 'gdual_v') {
+      const resultPointer = evaluate(inputPointer, numInputs, inputArrayLength)
+
+      const typedResults = new Float64Array(
+        F64.buffer,
+        resultPointer,
+        outputs * inputArrayLength
+      )
+
+      const result = Array.from(typedResults)
+
+      _delete_double_array(resultPointer)
+
+      return result
+    } else {
+      const results = []
+      const lengthOfInput = 1
+
+      for (let i = 0; i < inputArrayLength; i++) {
+        const result = evaluate(
+          inputPointer + i * inputs.length * F64.BYTES_PER_ELEMENT,
+          numInputs,
+          lengthOfInput
+        )
+
+        results.push(result)
+      }
+
+      return results
+    }
+  } else {
+    const lengthOfInput = 1
+    let result
+
+    if (type === 'gdual_v') {
+      const resultPointer = evaluate(inputPointer, numInputs, lengthOfInput)
+
+      result = F64[resultPointer / F64.BYTES_PER_ELEMENT]
+
+      _delete_double_array(resultPointer)
+    } else {
+      result = evaluate(inputPointer, numInputs)
+    }
+
+    return result
+  }
+}
 
 /**
  * @class
@@ -124,19 +199,22 @@ class Kernel {
    * Calculates the result of the kernel with `inputs`.
    *
    * @memberof Kernel
-   * @param {...number} inputs Input to the kernel. Must be at least two.
-   * @returns {number} The output of the kernel.
+   * @param {...(number|[number])} inputs Input to the kernel. Must be at least two.
+   * @returns {(number|[number])} The output of the kernel.
    * @example
    * kernel.evalutate(1, 2, 3)
    * // could for example return 2
+   * @example
+   * kernel.evalutate([1, 4], [2, 5], [3, 6])
+   * // could for example return [3, 2]
    */
   evaluate(...inputs) {
     if (inputs.length < 2) {
       throw 'Must at least provide two inputs'
     }
 
-    if (!inputs.every(i => typeof i === 'number')) {
-      throw 'Every entry of inputs must be a number'
+    if (!inputs.every(i => typeof i === 'number' || Array.isArray(i))) {
+      throw 'Every entry of inputs must be a number or an array with numbers'
     }
 
     const {
@@ -148,11 +226,18 @@ class Kernel {
 
     const stackStart = stackSave()
 
-    const inputArrayF64 = new Float64Array(inputs)
+    const inputArray = structureEvaluationInputs(this.type, inputs)
+
+    const inputArrayF64 = new Float64Array(inputArray)
     const inputPointer = stackAlloc(inputArrayF64.byteLength)
     setInHEAP(F64, inputArrayF64, inputPointer)
 
-    const result = evaluate(this.pointer, inputPointer, inputs.length)
+    const result = calculateEvaluation({
+      type: this.type,
+      inputs,
+      inputPointer,
+      evaluate: evaluate.bind(null, this.pointer),
+    })
 
     stackRestore(stackStart)
 

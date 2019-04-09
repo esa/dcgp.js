@@ -178,7 +178,7 @@ class KernelSet {
 
     const pointer = getKernel(this.pointer, index)
 
-    return new Kernel(null, null, null, pointer)
+    return new Kernel(null, null, null, pointer, this.type)
   }
 
   /**
