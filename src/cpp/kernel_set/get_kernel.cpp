@@ -12,7 +12,7 @@ typedef audi::gdual<audi::vectorized<double>> gdual_v;
 template <typename T>
 kernel<T> *get_kernel(const kernel_set<T>* const self, const unsigned &index)
 {
-  kernel<T> tmp_kernel = (*self)[index];
+  kernel<T> tmp_kernel = self->operator[](index);
 
   // copy to heap memory
   return new kernel<T>(tmp_kernel);

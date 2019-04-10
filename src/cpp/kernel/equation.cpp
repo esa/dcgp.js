@@ -21,7 +21,7 @@ char *equation(
   std::vector<std::string> input_strings;
   fill_strings_vector(input_strings, input_chars, num_inputs);
 
-  std::string result = (*self)(input_strings);
+  std::string result = self->operator()(input_strings);
 
   char *ret = new char[result.length() + 1];
   strcpy(ret, result.c_str());

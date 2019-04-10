@@ -222,6 +222,9 @@ class Expression {
    * @example
    * expression.evalutate(1, 2, 3)
    * // could for example return [2, 5]
+   * @example
+   * kernel.evalutate([1, 4], [2, 5], [3, 6])
+   * // could for example return [[2, 4], [5, 8]]
    */
   evaluate(...inputs) {
     if (inputs.length !== this.inputs) {

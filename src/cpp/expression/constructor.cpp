@@ -29,7 +29,7 @@ extern "C"
         columns,
         levels_back,
         arity,
-        (*kernels)(),
+        kernels->operator()(),
         seed);
   }
 
@@ -50,7 +50,7 @@ extern "C"
         columns,
         levels_back,
         arity,
-        (*kernels)(),
+        kernels->operator()(),
         seed);
   }
 
@@ -71,7 +71,7 @@ extern "C"
         columns,
         levels_back,
         arity,
-        (*kernels)(),
+        kernels->operator()(),
         seed);
   }
 
@@ -92,7 +92,7 @@ extern "C"
         columns,
         levels_back,
         arity,
-        (*kernels)(),
+        kernels->operator()(),
         seed);
   }
 
@@ -113,7 +113,7 @@ extern "C"
         columns,
         levels_back,
         arity,
-        (*kernels)(),
+        kernels->operator()(),
         seed);
   }
 
@@ -134,7 +134,7 @@ extern "C"
         columns,
         levels_back,
         arity,
-        (*kernels)(),
+        kernels->operator()(),
         seed);
   }
 }

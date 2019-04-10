@@ -16,7 +16,7 @@ extern "C"
   unsigned EMSCRIPTEN_KEEPALIVE kernel_set_num_kernels(
       const kernel_set<double> *const self)
   {
-    std::vector<kernel<double>> kernels = (*self)();
+    std::vector<kernel<double>> kernels = self->operator()();
 
     return kernels.size();
   }
@@ -24,7 +24,7 @@ extern "C"
   unsigned EMSCRIPTEN_KEEPALIVE kernel_set_num_kernels_gdual_d(
       const kernel_set<gdual_d> *const self)
   {
-    std::vector<kernel<gdual_d>> kernels = (*self)();
+    std::vector<kernel<gdual_d>> kernels = self->operator()();
 
     return kernels.size();
   }
@@ -32,7 +32,7 @@ extern "C"
   unsigned EMSCRIPTEN_KEEPALIVE kernel_set_num_kernels_gdual_v(
       const kernel_set<gdual_v> *const self)
   {
-    std::vector<kernel<gdual_v>> kernels = (*self)();
+    std::vector<kernel<gdual_v>> kernels = self->operator()();
 
     return kernels.size();
   }
@@ -41,7 +41,7 @@ extern "C"
 template <typename T>
 void get_kernels(const kernel_set<T> *const self, const kernel<T> **const kernels_array)
 {
-  std::vector<kernel<T>> kernels = (*self)();
+  std::vector<kernel<T>> kernels = self->operator()();
 
   for (size_t i = 0; i < kernels.size(); i++)
   {

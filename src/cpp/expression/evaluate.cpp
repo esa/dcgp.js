@@ -22,7 +22,7 @@ extern "C"
 
     std::vector<double> input_vector(inputs, inputs + num_inputs);
 
-    std::vector<double> results = (*self)(input_vector);
+    std::vector<double> results = self->operator()(input_vector);
 
     double *ret = array_to_heap<double>(&results[0], num_outputs);
 
@@ -44,7 +44,7 @@ extern "C"
       input_vector.emplace_back(inputs[i]);
     }
 
-    std::vector<gdual_d> results = (*self)(input_vector);
+    std::vector<gdual_d> results = self->operator()(input_vector);
 
     double *const ret = new double[num_outputs];
 
@@ -75,7 +75,7 @@ extern "C"
               inputs + (i + 1) * inputs_length));
     }
 
-    std::vector<gdual_v> results = (*self)(input_vector);
+    std::vector<gdual_v> results = self->operator()(input_vector);
 
     double *const ret = new double[num_outputs * inputs_length];
 

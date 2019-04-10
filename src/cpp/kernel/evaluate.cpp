@@ -20,7 +20,7 @@ extern "C"
   {
     std::vector<double> input_vector(inputs, inputs + num_inputs);
 
-    double result = (*self)(input_vector);
+    double result = self->operator()(input_vector);
     return result;
   }
 
@@ -37,7 +37,7 @@ extern "C"
       input_vector.emplace_back(inputs[i]);
     }
 
-    gdual_d result = (*self)(input_vector);
+    gdual_d result = self->operator()(input_vector);
 
     double ret = result.constant_cf();
     return ret;
@@ -60,7 +60,7 @@ extern "C"
               inputs + (i + 1) * inputs_length));
     }
 
-    gdual_v result = (*self)(input_vector);
+    gdual_v result = self->operator()(input_vector);
 
     double *const ret = new double[inputs_length];
 
