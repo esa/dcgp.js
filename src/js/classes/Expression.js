@@ -66,6 +66,7 @@ function calculateEvaluation({ inputs, inputPointer, evaluate, outputs }) {
 
 /**
  * @class
+ * @property {[number]} chromosome Chromosome of the Expression can be get or set.
  * @param {number} inputs Number of inputs.
  * @param {number} outputs Number of outputs
  * @param {number} rows Number of rows.
@@ -74,7 +75,6 @@ function calculateEvaluation({ inputs, inputPointer, evaluate, outputs }) {
  * @param {number} arity The number of incomming connections of a node.
  * @param {KernelSet} kernelSet Instances with the kernels to be used in the expression.
  * @param {number} seed Pseudo random number generator seed.
- * @property {[number]} Expression.chromosome Chromosome of the Expression can be get or set.
  */
 class Expression {
   constructor(
@@ -116,6 +116,10 @@ class Expression {
     })
   }
 
+  /**
+   * @memberof Expression
+   * @type {number[]}
+   */
   get chromosome() {
     const {
       exports: {
@@ -192,7 +196,7 @@ class Expression {
    *
    * @memberof Expression
    * @param {...(number|[number])} inputs Input to the expression.
-   * @returns {[number]} The outputs of the expression.
+   * @returns {number[]} The outputs of the expression.
    * @example
    * expression.evalutate(1, 2, 3)
    * // could for example return [2, 5]
@@ -240,7 +244,7 @@ class Expression {
    *
    * @memberof Expression
    * @param {...string} inputSymbols Symbol for the inputs of the expression.
-   * @returns {[string]} Array with with the equation for every output of the expression.
+   * @returns {string[]} Array with with the equation for every output of the expression.
    * @example
    * expression.equation('a', 'b')
    * // could for example return ['(a+b)']

@@ -6,6 +6,7 @@ import { getInstance } from '../initialiser'
  */
 
 /**
+ * @namespace Algorithm
  * @param {Expression} expression Expression to evolve.
  * @param {number} mu Number of members of the population to keep alive.
  * @param {number} lambda Number of new members to generate.
@@ -14,8 +15,9 @@ import { getInstance } from '../initialiser'
  * @param {[[number]]} labels The ground truth, the target outputs.
  * @param {[number]} [constants] Ephemeral constants to be used in addition to `inputs`.
  * If the type of the expression is a form of 'gdual' these constants will be learned.
+ * @returns {object}
  */
-export default function muPlusLambda(
+function muPlusLambda(
   expression,
   mu,
   lambda,
@@ -86,3 +88,5 @@ export default function muPlusLambda(
     chromosome,
   }
 }
+
+export default muPlusLambda

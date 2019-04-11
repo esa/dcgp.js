@@ -176,8 +176,9 @@ class KernelSet {
 
   /**
    * Get the names of the Kernels in the Set.
+   * @readonly
    * @memberof KernelSet
-   * @returns {[string]} The names of the Kernels in the set.
+   * @type {string[]} The names of the Kernels in the set.
    */
   get names() {
     const names = this.kernels.map(kernel => {

@@ -6,6 +6,7 @@ import { getInstance } from '../initialiser'
  */
 
 /**
+ * @namespace Algorithm
  * @param {Expression} expression Expression to evolve the constants of.
  * @param {number} learningRate Rate at which the constants will update.
  * @param {number} maxSteps Maximum amount of steps before the algorithm stop.
@@ -14,8 +15,9 @@ import { getInstance } from '../initialiser'
  * @param {[[number]]} labels The ground truth, the target outputs.
  * @param {[number]} [constants] Ephemeral constants to be used in addition to `inputs`.
  * The gradient descent algorithm will learn the constants to minimize the Mean Squared Error.
+ * @returns {object}
  */
-export default function gradientDescent(
+function gradientDescent(
   expression,
   learningRate,
   maxSteps,
@@ -98,3 +100,5 @@ export default function gradientDescent(
     constants: learnedConstants,
   }
 }
+
+export default gradientDescent

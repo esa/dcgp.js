@@ -53,7 +53,6 @@ function calculateEvaluation({ inputs, inputPointer, evaluate }) {
  * @param {(...string) => string} stringFunction Function creating the equation of the kernel.
  * @param {string} name Name of the Kernel.
  * @param {number} [pointer] Pointer to an existing Kernel in memory.
- * @param {('double'|'gdual_d'|'gdual_v')} [type='double']
  */
 class Kernel {
   constructor(operatorFunction, stringFunction, name, pointer = null) {
