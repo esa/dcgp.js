@@ -1,14 +1,14 @@
 #include <emscripten.h>
 #include <dcgp/kernel_set.hpp>
 #include <dcgp/kernel.hpp>
-#include <audi/gdual.hpp>
-#include <audi/vectorized.hpp>
+// #include <audi/gdual.hpp>
+// #include <audi/vectorized.hpp>
 #include <vector>
 
 using namespace dcgp;
 
-typedef audi::gdual<double> gdual_d;
-typedef audi::gdual<audi::vectorized<double>> gdual_v;
+// typedef audi::gdual<double> gdual_d;
+// typedef audi::gdual<audi::vectorized<double>> gdual_v;
 
 // get number of kernels in set
 extern "C"
@@ -21,21 +21,21 @@ extern "C"
     return kernels.size();
   }
 
-  unsigned EMSCRIPTEN_KEEPALIVE kernel_set_num_kernels_gdual_d(
-      const kernel_set<gdual_d> *const self)
-  {
-    std::vector<kernel<gdual_d>> kernels = self->operator()();
+  // unsigned EMSCRIPTEN_KEEPALIVE kernel_set_num_kernels_gdual_d(
+  //     const kernel_set<gdual_d> *const self)
+  // {
+  //   std::vector<kernel<gdual_d>> kernels = self->operator()();
 
-    return kernels.size();
-  }
+  //   return kernels.size();
+  // }
 
-  unsigned EMSCRIPTEN_KEEPALIVE kernel_set_num_kernels_gdual_v(
-      const kernel_set<gdual_v> *const self)
-  {
-    std::vector<kernel<gdual_v>> kernels = self->operator()();
+  // unsigned EMSCRIPTEN_KEEPALIVE kernel_set_num_kernels_gdual_v(
+  //     const kernel_set<gdual_v> *const self)
+  // {
+  //   std::vector<kernel<gdual_v>> kernels = self->operator()();
 
-    return kernels.size();
-  }
+  //   return kernels.size();
+  // }
 }
 
 template <typename T>

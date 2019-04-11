@@ -1,4 +1,4 @@
-import { setInHEAP, flatten2D, getExportsFactory } from '../helpers'
+import { setInHEAP, flatten2D } from '../helpers'
 import { getInstance } from '../initialiser'
 
 /**
@@ -31,14 +31,8 @@ export default function muPlusLambda(
 
   const {
     memory: { F64 },
-    exports: { stackAlloc, stackSave, stackRestore },
+    exports: { stackAlloc, stackSave, stackRestore, _algorithm_mu_plus_lambda },
   } = getInstance()
-
-  const [muPlusLambdaWASM] = getExportsFactory(
-    'algorithm',
-    expression.type,
-    'mu_plus_lambda'
-  )
 
   const stackStart = stackSave()
 
@@ -72,7 +66,7 @@ export default function muPlusLambda(
     setInHEAP(F64, typedConstants, constantsPointer)
   }
 
-  const loss = muPlusLambdaWASM(
+  const loss = _algorithm_mu_plus_lambda(
     expression.pointer,
     mu,
     lambda,

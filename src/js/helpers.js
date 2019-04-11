@@ -1,6 +1,3 @@
-import { DCGP_TYPES } from './constants'
-import { getInstance } from './initialiser'
-
 // get the TextEncoder in browser and node.js
 function getEncoder(...args) {
   let EncoderClass
@@ -179,67 +176,4 @@ export function grid2D(array, width) {
   }
 
   return grid
-}
-
-/**
- * Get the appropreate function from the C++ bindings based on name and type.
- *
- * @private
- * @param {...string} functionIds Name of the function to get from the exports without the type pre or suffix.
- * @returns {[function]} WASM exported functions in the same order as `funcNames`.
- * @example
- * const [constructor] = getExports('gdual_d', 'expression_constructor')
- */
-export const getExports = (...functionIds) => {
-  const { exports } = getInstance()
-
-  const exportedFuncs = functionIds.map(funcId => {
-    const exportedFunc = exports[funcId]
-
-    if (!exportedFunc) {
-      throw `${funcId} is not an exported function.`
-    }
-
-    return exportedFunc
-  })
-
-  return exportedFuncs
-}
-
-/**
- * Get the appropreate function from the C++ bindings based on name and type.
- *
- * @private
- * @description This will only work if a consistend naming scheme is being used to name the C++ binding functions
- * @example
- * _expression_constructor
- * _expression_constructor_gdual_d
- * _expression_constructor_gdual_v
- * @param {string} className Name of the class to get exports for.
- * @param {('double'|'gdual_d'|'gdual_v')} type
- * @param {...string} funcNames Name of the function to get from the exports without the type pre or suffix.
- * @returns {[function]} WASM exported functions in the same order as `funcNames`.
- * @example
- * const [constructor, evaluate] = getExportsFactory('expression', 'gdual_d', 'constructor', 'evaluate')
- * @example
- * const getExports = getExportsFactory.bind(null, 'expression', 'gdual_d')
- * const [constructor, evaluate] = getExports('constructor', 'evaluate')
- */
-export const getExportsFactory = (className, type, ...funcNames) => {
-  if (DCGP_TYPES.indexOf(type) === -1) {
-    throw `Type '${type}' is invalid. Must be one of ${DCGP_TYPES}`
-  }
-
-  let suffix = ''
-  if (type !== 'double') {
-    suffix += '_' + type
-  }
-
-  const funcIds = funcNames.map(funcName => {
-    const lowerCaseClassName = className.toLowerCase()
-    const funcId = '_' + lowerCaseClassName + '_' + funcName + suffix
-    return funcId
-  })
-
-  return getExports(...funcIds)
 }

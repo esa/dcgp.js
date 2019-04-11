@@ -1,12 +1,9 @@
-import { DCGP_TYPES } from '../constants'
 import {
   setInHEAP,
   decodeStringArray,
   encodeStringArray,
-  getExportsFactory,
   flatten2D,
   transpose2D,
-  grid2D,
 } from '../helpers'
 import { getInstance } from '../initialiser'
 
@@ -14,26 +11,16 @@ function randomSeed() {
   return Math.round(Math.random() * 10000)
 }
 
-function structureEvaluationInputs(type, inputs) {
+function structureEvaluationInputs(inputs) {
   if (Array.isArray(inputs[0])) {
-    if (type === 'gdual_v') {
-      return flatten2D(inputs)
-    } else {
-      return flatten2D(transpose2D(inputs))
-    }
+    return flatten2D(transpose2D(inputs))
   }
 
   return inputs
 }
 
 // TODO: refactor function
-function calculateEvaluation({
-  type,
-  inputs,
-  inputPointer,
-  evaluate,
-  outputs,
-}) {
+function calculateEvaluation({ inputs, inputPointer, evaluate, outputs }) {
   const {
     exports: { _delete_double_array },
     memory: { F64 },
@@ -42,39 +29,23 @@ function calculateEvaluation({
   if (Array.isArray(inputs[0])) {
     const inputArrayLength = inputs[0].length
 
-    if (type === 'gdual_v') {
-      const resultPointer = evaluate(inputPointer, inputArrayLength)
+    const results = []
+    const lengthOfInput = 1
 
-      const typedResults = new Float64Array(
-        F64.buffer,
-        resultPointer,
-        outputs * inputArrayLength
+    for (let i = 0; i < inputArrayLength; i++) {
+      const resultPointer = evaluate(
+        inputPointer + i * inputs.length * F64.BYTES_PER_ELEMENT,
+        lengthOfInput
       )
 
-      const flatResult = Array.from(typedResults)
+      const typedResult = new Float64Array(F64.buffer, resultPointer, outputs)
+
+      results.push(Array.from(typedResult))
 
       _delete_double_array(resultPointer)
-
-      return grid2D(flatResult, inputArrayLength)
-    } else {
-      const results = []
-      const lengthOfInput = 1
-
-      for (let i = 0; i < inputArrayLength; i++) {
-        const resultPointer = evaluate(
-          inputPointer + i * inputs.length * F64.BYTES_PER_ELEMENT,
-          lengthOfInput
-        )
-
-        const typedResult = new Float64Array(F64.buffer, resultPointer, outputs)
-
-        results.push(Array.from(typedResult))
-
-        _delete_double_array(resultPointer)
-      }
-
-      return transpose2D(results)
     }
+
+    return transpose2D(results)
   } else {
     const lengthOfInput = 1
     const resultPointer = evaluate(inputPointer, lengthOfInput)
@@ -103,7 +74,6 @@ function calculateEvaluation({
  * @param {number} arity The number of incomming connections of a node.
  * @param {KernelSet} kernelSet Instances with the kernels to be used in the expression.
  * @param {number} seed Pseudo random number generator seed.
- * @param {('double'|'gdual_d'|'gdual_v')} [type='double']
  * @property {[number]} Expression.chromosome Chromosome of the Expression can be get or set.
  */
 class Expression {
@@ -115,20 +85,15 @@ class Expression {
     levelsBack,
     arity,
     kernelSet,
-    seed = randomSeed,
-    type = 'double'
+    seed = randomSeed
   ) {
-    if (DCGP_TYPES.indexOf(type) === -1) {
-      throw `Expression type '${type}' is invalid. Must be one of ${DCGP_TYPES}`
-    }
-
-    const getExports = getExportsFactory.bind(null, 'expression', type)
+    const {
+      exports: { _expression_constructor },
+    } = getInstance()
 
     const calculatedSeed = typeof seed === 'function' ? seed() : seed
 
-    const [init] = getExports('constructor')
-
-    const pointer = init(
+    const pointer = _expression_constructor(
       inputs,
       outputs,
       rows,
@@ -148,24 +113,26 @@ class Expression {
       levelsBack: { value: levelsBack },
       arity: { value: arity },
       seed: { value: calculatedSeed },
-      type: { value: type },
-      getExports: { value: getExports },
     })
   }
 
   get chromosome() {
     const {
-      exports: { stackSave, stackAlloc, stackRestore, _delete_uint32_array },
+      exports: {
+        stackSave,
+        stackAlloc,
+        stackRestore,
+        _delete_uint32_array,
+        _expression_get_chromosome,
+      },
       memory: { U32 },
     } = getInstance()
 
     const stackStart = stackSave()
 
-    const [getChromosome] = this.getExports('get_chromosome')
-
     const lengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT)
 
-    const arrayPointer = getChromosome(this.pointer, lengthPointer)
+    const arrayPointer = _expression_get_chromosome(this.pointer, lengthPointer)
 
     const typedChromosome = new Uint32Array(
       U32.buffer,
@@ -195,11 +162,14 @@ class Expression {
     }
 
     const {
-      exports: { stackSave, stackAlloc, stackRestore },
+      exports: {
+        stackSave,
+        stackAlloc,
+        stackRestore,
+        _expression_set_chromosome,
+      },
       memory: { U32 },
     } = getInstance()
-
-    const [setChromosome] = this.getExports('set_chromosome')
 
     const stackStart = stackSave()
 
@@ -208,7 +178,11 @@ class Expression {
 
     setInHEAP(U32, typedChromosome, chromosomePointer)
 
-    setChromosome(this.pointer, chromosomePointer, typedChromosome.length)
+    _expression_set_chromosome(
+      this.pointer,
+      chromosomePointer,
+      typedChromosome.length
+    )
 
     stackRestore(stackStart)
   }
@@ -237,15 +211,13 @@ class Expression {
     }
 
     const {
-      exports: { stackSave, stackAlloc, stackRestore },
+      exports: { stackSave, stackAlloc, stackRestore, _expression_evaluate },
       memory: { F64 },
     } = getInstance()
 
-    const [evaluate] = this.getExports('evaluate')
-
     const stackStart = stackSave()
 
-    const inputArray = structureEvaluationInputs(this.type, inputs)
+    const inputArray = structureEvaluationInputs(inputs)
 
     const inputArrayF64 = new Float64Array(inputArray)
     const inputPointer = stackAlloc(inputArrayF64.byteLength)
@@ -253,10 +225,9 @@ class Expression {
 
     const results = calculateEvaluation({
       outputs: this.outputs,
-      type: this.type,
       inputs,
       inputPointer,
-      evaluate: evaluate.bind(null, this.pointer),
+      evaluate: _expression_evaluate.bind(null, this.pointer),
     })
 
     stackRestore(stackStart)
@@ -274,7 +245,7 @@ class Expression {
    * expression.equation('a', 'b')
    * // could for example return ['(a+b)']
    */
-  equation(...inputSymbols) {
+  equations(...inputSymbols) {
     if (inputSymbols.length !== this.inputs) {
       throw 'Number of inputSymbols needs to match' +
         `the number of inputs of the expression which is ${this.inputs}`
@@ -284,11 +255,15 @@ class Expression {
       throw 'Every entry of inputSymbols must be a string'
     }
     const {
-      exports: { stackSave, stackAlloc, stackRestore, _delete_string },
+      exports: {
+        stackSave,
+        stackAlloc,
+        stackRestore,
+        _delete_string,
+        _expression_equation,
+      },
       memory: { U8 },
     } = getInstance()
-
-    const [equation] = this.getExports('equation')
 
     const stackStart = stackSave()
 
@@ -296,7 +271,7 @@ class Expression {
     const stringsPointer = stackAlloc(encodedStrings.byteLength)
     setInHEAP(U8, encodedStrings, stringsPointer)
 
-    const resultPointer = equation(this.pointer, stringsPointer)
+    const resultPointer = _expression_equation(this.pointer, stringsPointer)
     const results = decodeStringArray(U8, resultPointer, this.outputs)
 
     _delete_string(resultPointer)
@@ -349,14 +324,24 @@ class Expression {
   // setFunction(nodeIndexes, kernelIds) {}
 
   /**
+   * @readonly
+   * @private
+   */
+  get [Symbol.toStringTag]() {
+    return 'Expression'
+  }
+
+  /**
    * Cleans this object from the shared memory with WebAssembly.
    * Must be called before the instance goes out off scope to prevent memory leaks.
    * @memberof Expression
    */
   destroy() {
-    const [destroy] = this.getExports('destroy')
+    const {
+      exports: { _expression_destroy },
+    } = getInstance()
 
-    destroy(this.pointer)
+    _expression_destroy(this.pointer)
   }
 }
 

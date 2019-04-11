@@ -11,9 +11,10 @@ void fill_vector_grid(
     const unsigned &xy_length,
     const unsigned &num_inputs,
     const unsigned &num_outputs,
-    vector<T> &constants)
+    const double *const &constants,
+    const unsigned &constants_length)
 {
-  const unsigned inputs_length = num_inputs - constants.size();
+  const unsigned inputs_length = num_inputs - constants_length;
 
   for (size_t i = 0; i < xy_length; i++)
   {
@@ -21,7 +22,7 @@ void fill_vector_grid(
     {
       if (j >= inputs_length)
       {
-        x_dest[i][j] = constants[j - inputs_length];
+        x_dest[i][j] = T(constants[j - inputs_length]);
       }
       else
       {

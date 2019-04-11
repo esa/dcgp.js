@@ -1,7 +1,7 @@
 #include <emscripten.h>
 #include <dcgp/expression.hpp>
-#include <audi/gdual.hpp>
-#include <audi/vectorized.hpp>
+// #include <audi/gdual.hpp>
+// #include <audi/vectorized.hpp>
 #include <vector>
 #include <string>
 
@@ -9,8 +9,8 @@
 
 using namespace dcgp;
 
-typedef audi::gdual<double> gdual_d;
-typedef audi::gdual<audi::vectorized<double>> gdual_v;
+// typedef audi::gdual<double> gdual_d;
+// typedef audi::gdual<audi::vectorized<double>> gdual_v;
 
 template <typename T>
 char *equation(
@@ -56,17 +56,17 @@ extern "C"
     return equation<double>(self, inputs);
   }
 
-  char *EMSCRIPTEN_KEEPALIVE expression_equation_gdual_d(
-      const expression<gdual_d> *const self,
-      const char *const inputs)
-  {
-    return equation<gdual_d>(self, inputs);
-  }
+  // char *EMSCRIPTEN_KEEPALIVE expression_equation_gdual_d(
+  //     const expression<gdual_d> *const self,
+  //     const char *const inputs)
+  // {
+  //   return equation<gdual_d>(self, inputs);
+  // }
 
-  char *EMSCRIPTEN_KEEPALIVE expression_equation_gdual_v(
-      const expression<gdual_v> *const self,
-      const char *const inputs)
-  {
-    return equation<gdual_v>(self, inputs);
-  }
+  // char *EMSCRIPTEN_KEEPALIVE expression_equation_gdual_v(
+  //     const expression<gdual_v> *const self,
+  //     const char *const inputs)
+  // {
+  //   return equation<gdual_v>(self, inputs);
+  // }
 }

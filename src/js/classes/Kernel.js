@@ -1,82 +1,46 @@
-import { DCGP_TYPES } from '../constants'
 import {
   setInHEAP,
   encodeStringArray,
   decodeString,
-  getExportsFactory,
   flatten2D,
   transpose2D,
 } from '../helpers'
 import { getInstance } from '../initialiser'
 
-function structureEvaluationInputs(type, inputs) {
+function structureEvaluationInputs(inputs) {
   if (Array.isArray(inputs[0])) {
-    if (type === 'gdual_v') {
-      return flatten2D(inputs)
-    } else {
-      return flatten2D(transpose2D(inputs))
-    }
+    return flatten2D(transpose2D(inputs))
   }
 
   return inputs
 }
 
 // TODO: refactor function
-function calculateEvaluation({ type, inputs, inputPointer, evaluate }) {
+function calculateEvaluation({ inputs, inputPointer, evaluate }) {
   const {
-    exports: { _delete_double_array },
     memory: { F64 },
   } = getInstance()
-
-  const outputs = 1
   const numInputs = inputs.length
 
   if (Array.isArray(inputs[0])) {
     const inputArrayLength = inputs[0].length
 
-    if (type === 'gdual_v') {
-      const resultPointer = evaluate(inputPointer, numInputs, inputArrayLength)
+    const results = []
+    const lengthOfInput = 1
 
-      const typedResults = new Float64Array(
-        F64.buffer,
-        resultPointer,
-        outputs * inputArrayLength
+    for (let i = 0; i < inputArrayLength; i++) {
+      const result = evaluate(
+        inputPointer + i * inputs.length * F64.BYTES_PER_ELEMENT,
+        numInputs,
+        lengthOfInput
       )
 
-      const result = Array.from(typedResults)
-
-      _delete_double_array(resultPointer)
-
-      return result
-    } else {
-      const results = []
-      const lengthOfInput = 1
-
-      for (let i = 0; i < inputArrayLength; i++) {
-        const result = evaluate(
-          inputPointer + i * inputs.length * F64.BYTES_PER_ELEMENT,
-          numInputs,
-          lengthOfInput
-        )
-
-        results.push(result)
-      }
-
-      return results
+      results.push(result)
     }
+
+    return results
   } else {
-    const lengthOfInput = 1
-    let result
-
-    if (type === 'gdual_v') {
-      const resultPointer = evaluate(inputPointer, numInputs, lengthOfInput)
-
-      result = F64[resultPointer / F64.BYTES_PER_ELEMENT]
-
-      _delete_double_array(resultPointer)
-    } else {
-      result = evaluate(inputPointer, numInputs)
-    }
+    const result = evaluate(inputPointer, numInputs)
 
     return result
   }
@@ -84,7 +48,7 @@ function calculateEvaluation({ type, inputs, inputPointer, evaluate }) {
 
 /**
  * @class
- * @property {string} name
+ * @property {string} name The name of the kernel.
  * @param {(...number) => number} operatorFunction Function calculating the result of the kernel.
  * @param {(...string) => string} stringFunction Function creating the equation of the kernel.
  * @param {string} name Name of the Kernel.
@@ -92,35 +56,16 @@ function calculateEvaluation({ type, inputs, inputPointer, evaluate }) {
  * @param {('double'|'gdual_d'|'gdual_v')} [type='double']
  */
 class Kernel {
-  constructor(
-    operatorFunction,
-    stringFunction,
-    name,
-    pointer = null,
-    type = 'double'
-  ) {
-    if (DCGP_TYPES.indexOf(type) === -1) {
-      throw `Expression type '${type}' is invalid. Must be one of ${DCGP_TYPES}`
-    }
-
-    const getExports = getExportsFactory.bind(null, 'kernel', type)
-
-    Object.defineProperties(this, {
-      type: { value: type },
-      getExports: { value: getExports },
-    })
-
+  constructor(operatorFunction, stringFunction, name, pointer = null) {
     if (pointer) {
       const {
-        exports: { _delete_string },
+        exports: { _delete_string, _kernel_name },
         memory: { U8 },
       } = getInstance()
 
-      const [getName] = getExports('name')
-
       Object.defineProperty(this, 'pointer', { value: pointer })
 
-      const namePointer = getName(this.pointer)
+      const namePointer = _kernel_name(this.pointer)
 
       const name = decodeString(U8, namePointer)
 
@@ -218,25 +163,22 @@ class Kernel {
     }
 
     const {
-      exports: { stackSave, stackAlloc, stackRestore },
+      exports: { stackSave, stackAlloc, stackRestore, _kernel_evaluate },
       memory: { F64 },
     } = getInstance()
 
-    const [evaluate] = this.getExports('evaluate')
-
     const stackStart = stackSave()
 
-    const inputArray = structureEvaluationInputs(this.type, inputs)
+    const inputArray = structureEvaluationInputs(inputs)
 
     const inputArrayF64 = new Float64Array(inputArray)
     const inputPointer = stackAlloc(inputArrayF64.byteLength)
     setInHEAP(F64, inputArrayF64, inputPointer)
 
     const result = calculateEvaluation({
-      type: this.type,
       inputs,
       inputPointer,
-      evaluate: evaluate.bind(null, this.pointer),
+      evaluate: _kernel_evaluate.bind(null, this.pointer),
     })
 
     stackRestore(stackStart)
@@ -264,11 +206,15 @@ class Kernel {
     }
 
     const {
-      exports: { stackSave, stackAlloc, stackRestore, _delete_string },
+      exports: {
+        stackSave,
+        stackAlloc,
+        stackRestore,
+        _delete_string,
+        _kernel_equation,
+      },
       memory: { U8 },
     } = getInstance()
-
-    const [equation] = this.getExports('equation')
 
     const stackStart = stackSave()
 
@@ -277,7 +223,7 @@ class Kernel {
     const stringsPointer = stackAlloc(encodedStrings.byteLength)
     setInHEAP(U8, encodedStrings, stringsPointer)
 
-    const resultPointer = equation(
+    const resultPointer = _kernel_equation(
       this.pointer,
       stringsPointer,
       inputSymbols.length
@@ -292,12 +238,11 @@ class Kernel {
   }
 
   /**
-   * Get a string representation of the Kernel.
-   * @memberof Kernel
-   * @returns {string} The name of the Kernel.
+   * @readonly
+   * @private
    */
-  toString() {
-    return this.name
+  get [Symbol.toStringTag]() {
+    return 'Kernel'
   }
 
   /**
@@ -305,7 +250,9 @@ class Kernel {
    * @memberof Kernel
    */
   destroy() {
-    const [destroy] = this.getExports('destroy')
+    const {
+      exports: { _kernel_destroy },
+    } = getInstance()
 
     // Use this to remove the custom functions if used.
     // See comment at constructor for more info.
@@ -315,7 +262,7 @@ class Kernel {
     //   });
     // }
 
-    destroy(this.pointer)
+    _kernel_destroy(this.pointer)
   }
 }
 

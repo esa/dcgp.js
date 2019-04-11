@@ -1,14 +1,14 @@
 #include <emscripten.h>
 #include <dcgp/kernel_set.hpp>
-#include <audi/gdual.hpp>
-#include <audi/vectorized.hpp>
+// #include <audi/gdual.hpp>
+// #include <audi/vectorized.hpp>
 
 #include "../utils/utils.hpp"
 
 using namespace dcgp;
 
-typedef audi::gdual<double> gdual_d;
-typedef audi::gdual<audi::vectorized<double>> gdual_v;
+// typedef audi::gdual<double> gdual_d;
+// typedef audi::gdual<audi::vectorized<double>> gdual_v;
 
 // empty constructor
 extern "C"
@@ -18,15 +18,15 @@ extern "C"
     return new kernel_set<double>();
   }
 
-  kernel_set<gdual_d> *EMSCRIPTEN_KEEPALIVE kernel_set_constructor_0_gdual_d()
-  {
-    return new kernel_set<gdual_d>();
-  }
+  // kernel_set<gdual_d> *EMSCRIPTEN_KEEPALIVE kernel_set_constructor_0_gdual_d()
+  // {
+  //   return new kernel_set<gdual_d>();
+  // }
 
-  kernel_set<gdual_v> *EMSCRIPTEN_KEEPALIVE kernel_set_constructor_0_gdual_v()
-  {
-    return new kernel_set<gdual_v>();
-  }
+  // kernel_set<gdual_v> *EMSCRIPTEN_KEEPALIVE kernel_set_constructor_0_gdual_v()
+  // {
+  //   return new kernel_set<gdual_v>();
+  // }
 }
 
 template <typename T>
@@ -48,17 +48,17 @@ extern "C"
     return constructor<double>(names, num_names);
   }
 
-  kernel_set<gdual_d> *EMSCRIPTEN_KEEPALIVE kernel_set_constructor_1_gdual_d(
-      const char *const names,
-      unsigned num_names)
-  {
-    return constructor<gdual_d>(names, num_names);
-  }
+  // kernel_set<gdual_d> *EMSCRIPTEN_KEEPALIVE kernel_set_constructor_1_gdual_d(
+  //     const char *const names,
+  //     unsigned num_names)
+  // {
+  //   return constructor<gdual_d>(names, num_names);
+  // }
 
-  kernel_set<gdual_v> *EMSCRIPTEN_KEEPALIVE kernel_set_constructor_1_gdual_v(
-      const char *const names,
-      unsigned num_names)
-  {
-    return constructor<gdual_v>(names, num_names);
-  }
+  // kernel_set<gdual_v> *EMSCRIPTEN_KEEPALIVE kernel_set_constructor_1_gdual_v(
+  //     const char *const names,
+  //     unsigned num_names)
+  // {
+  //   return constructor<gdual_v>(names, num_names);
+  // }
 }

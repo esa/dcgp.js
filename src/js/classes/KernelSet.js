@@ -1,10 +1,4 @@
-import { DCGP_TYPES } from '../constants'
-import {
-  setInHEAP,
-  encodeStringArray,
-  encodeString,
-  getExportsFactory,
-} from '../helpers'
+import { setInHEAP, encodeStringArray, encodeString } from '../helpers'
 import { getInstance } from '../initialiser'
 import Kernel from './Kernel'
 
@@ -23,7 +17,6 @@ const kernelNameOptions = {
 /**
  * @class
  * @param {[String]} kernelNames Names of the kernels to add to the set.
- * @param {('double'|'gdual_d'|'gdual_v')} [type='double']
  */
 class KernelSet {
   static SUM = kernelNameOptions.SUM
@@ -38,20 +31,15 @@ class KernelSet {
 
   static ALL_KERNELS = Object.values(kernelNameOptions)
 
-  constructor(kernelNames, type = 'double') {
-    if (DCGP_TYPES.indexOf(type) === -1) {
-      throw `Expression type '${type}' is invalid. Must be one of ${DCGP_TYPES}`
-    }
-
-    const getExports = getExportsFactory.bind(null, 'kernel_set', type)
-
-    Object.defineProperties(this, {
-      type: { value: type },
-      getExports: { value: getExports },
-    })
-
+  constructor(kernelNames) {
     const {
-      exports: { stackSave, stackAlloc, stackRestore },
+      exports: {
+        stackSave,
+        stackAlloc,
+        stackRestore,
+        _kernel_set_constructor_0,
+        _kernel_set_constructor_1,
+      },
       memory: { U8 },
     } = getInstance()
 
@@ -64,8 +52,6 @@ class KernelSet {
         throw 'Every entry of kernelNames must be a string'
       }
 
-      const [init] = getExports('constructor_1')
-
       const stackStart = stackSave()
 
       const encodedStrings = encodeStringArray(kernelNames)
@@ -73,7 +59,10 @@ class KernelSet {
       const namesPointer = stackAlloc(encodedStrings.byteLength)
       setInHEAP(U8, encodedStrings, namesPointer)
 
-      const receivedPointer = init(namesPointer, kernelNames.length)
+      const receivedPointer = _kernel_set_constructor_1(
+        namesPointer,
+        kernelNames.length
+      )
 
       Object.defineProperty(this, 'pointer', { value: receivedPointer })
 
@@ -81,9 +70,7 @@ class KernelSet {
       return
     }
 
-    const [init] = getExports('constructor_0')
-
-    const receivedPointer = init()
+    const receivedPointer = _kernel_set_constructor_0()
     Object.defineProperty(this, 'pointer', { value: receivedPointer })
   }
 
@@ -95,14 +82,18 @@ class KernelSet {
    */
   push(kernel) {
     const {
-      exports: { stackSave, stackAlloc, stackRestore },
+      exports: {
+        stackSave,
+        stackAlloc,
+        stackRestore,
+        _kernel_set_push_back_0,
+        _kernel_set_push_back_1,
+      },
       memory: { U8 },
     } = getInstance()
 
     if (kernel instanceof Kernel) {
-      const [push_back] = this.getExports('push_back_1')
-
-      push_back(this.pointer, kernel.pointer)
+      _kernel_set_push_back_1(this.pointer, kernel.pointer)
       return
     }
 
@@ -116,8 +107,7 @@ class KernelSet {
     const textPointer = stackAlloc(textArray.byteLength)
     setInHEAP(U8, textArray, textPointer)
 
-    const [push_back] = this.getExports('push_back_0')
-    push_back(this.pointer, textPointer)
+    _kernel_set_push_back_0(this.pointer, textPointer)
 
     stackRestore(stackStart)
   }
@@ -128,18 +118,19 @@ class KernelSet {
    */
   get kernels() {
     const {
-      exports: { stackSave, stackAlloc, stackRestore },
+      exports: {
+        stackSave,
+        stackAlloc,
+        stackRestore,
+        _kernel_set_num_kernels,
+        _kernel_set_get_kernels,
+      },
       memory: { U32 },
     } = getInstance()
 
     const stackStart = stackSave()
 
-    const [getNumKernels, getKernels] = this.getExports(
-      'num_kernels',
-      'get_kernels'
-    )
-
-    const numKernels = getNumKernels(this.pointer)
+    const numKernels = _kernel_set_num_kernels(this.pointer)
 
     if (numKernels === 0) {
       return []
@@ -147,7 +138,7 @@ class KernelSet {
 
     const pointersArrPointer = stackAlloc(U32.BYTES_PER_ELEMENT * numKernels)
 
-    getKernels(this.pointer, pointersArrPointer)
+    _kernel_set_get_kernels(this.pointer, pointersArrPointer)
 
     const kernelPointers = new Uint32Array(
       U32.buffer,
@@ -174,34 +165,38 @@ class KernelSet {
    * @returns {Kernel} The kernel at `index` of the set.
    */
   kernel(index) {
-    const [getKernel] = this.getExports('get_kernel')
+    const {
+      exports: { _kernel_set_get_kernel },
+    } = getInstance()
 
-    const pointer = getKernel(this.pointer, index)
+    const pointer = _kernel_set_get_kernel(this.pointer, index)
 
-    return new Kernel(null, null, null, pointer, this.type)
+    return new Kernel(null, null, null, pointer)
   }
 
   /**
-   * Get a string representation of the KernelSet.
+   * Get the names of the Kernels in the Set.
    * @memberof KernelSet
-   * @returns {string} The string representation of the KernelSet.
+   * @returns {[string]} The names of the Kernels in the set.
    */
-  toString() {
-    const kernels = this.kernels
+  get names() {
+    const names = this.kernels.map(kernel => {
+      const name = kernel.name
 
-    let stringResult = ''
-    const lastIndex = kernels.length - 1
+      kernel.destroy()
 
-    for (let index = 0; index < lastIndex; index++) {
-      stringResult += kernels[index].toString()
-      stringResult += ', '
-      kernels[index].destroy()
-    }
+      return name
+    })
 
-    stringResult += kernels[lastIndex].toString()
-    kernels[lastIndex].destroy()
+    return names
+  }
 
-    return stringResult
+  /**
+   * @readonly
+   * @private
+   */
+  get [Symbol.toStringTag]() {
+    return 'KernelSet'
   }
 
   /**
@@ -209,9 +204,11 @@ class KernelSet {
    * @memberof KernelSet
    */
   clear() {
-    const [clear] = this.getExports('clear')
+    const {
+      exports: { _kernel_set_clear },
+    } = getInstance()
 
-    clear(this.pointer)
+    _kernel_set_clear(this.pointer)
   }
 
   /**
@@ -219,9 +216,11 @@ class KernelSet {
    * @memberof KernelSet
    */
   destroy() {
-    const [destroy] = this.getExports('destroy')
+    const {
+      exports: { _kernel_set_destroy },
+    } = getInstance()
 
-    destroy(this.pointer)
+    _kernel_set_destroy(this.pointer)
   }
 }
 
