@@ -8,12 +8,14 @@ const cwd = process.cwd()
 const INCLUDE_DIR = join('/usr', 'local', 'include')
 const LIBRARY_DIR = join('/usr', 'local', 'lib')
 const bitFile = 'dcgp.bc'
-const optimalisation = '-O3'
+const optimalisation = '-O0'
 
 const bitArgs = [
   `-I${INCLUDE_DIR}`,
   '-I/usr/include/eigen3',
   '-std=c++11',
+  '--cache',
+  join(cwd, 'cache'),
   optimalisation,
   '-o',
   bitFile,
@@ -34,6 +36,8 @@ const wasmArgs = [
   join(LIBRARY_DIR, 'libboost_wserialization.so'),
   optimalisation,
   '-g4',
+  '--cache',
+  join(cwd, 'cache'),
   '--pre-js',
   join(cwd, 'src', 'js', 'pre.js'),
   '-o',
@@ -78,5 +82,6 @@ glob('src/cpp/**/*.cpp', null, (error, files) => {
     throw new Error(error)
   }
 
-  build(files)
+  // error is not necessarily an error.
+  build(files).catch(error => console.warn(error))
 })

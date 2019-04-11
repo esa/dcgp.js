@@ -6,8 +6,16 @@ yarn-debug.log*
 yarn-error.log*
 
 lib/
+tmp/
+out/
+cache/
+*.lock
 dcgp.js
 dcgp.wasm
 dcgp.wasm.map
 dcgp.wast
 dcgp.bc
+emscripten_temp_*
+
+include/
+.vscode/ipch

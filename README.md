@@ -66,3 +66,14 @@ npx http-server lib
 exit
 
 ```
+
+## VSCode IntelliSense support
+To have IntelliSense support for the C++ files the include folder from the container needs to be copied to the local file system. For this you can use the following commands ones the docker images `mikeheddes/dcgp.js-dependencies` is running.
+
+```bash
+# Copy the container ID 
+docker ps
+docker cp REPLACE_WITH_THE_ID:/usr/local/include ./
+docker cp REPLACE_WITH_THE_ID:/root/emsdk/emscripten/tag-1.38.30/system/include/ ./
+docker cp REPLACE_WITH_THE_ID:/usr/include/eigen3 ./include/
+```
