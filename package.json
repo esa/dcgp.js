@@ -1,6 +1,6 @@
 {
   "name": "dcgp",
-  "version": "0.5.1",
+  "version": "1.0.0-beta.0",
   "description": "JavaScript bindings of dcgp compiled to WebAssembly",
   "main": "lib/dcgp.umd.js",
   "module": "lib/dcgp.es.js",

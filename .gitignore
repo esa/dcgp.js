@@ -15,6 +15,7 @@ dcgp.wasm
 dcgp.wasm.map
 dcgp.wast
 dcgp.bc
+emscripten_temp_*
 
 include/
 .vscode/ipch
