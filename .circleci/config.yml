@@ -126,7 +126,14 @@ jobs:
 
       - run:
           name: Publishing package on NPM
-          command: npm publish
+          command: |
+            VERSION=$(cat .circleci/dcgp-version)
+
+            if [[ $VERSION == *"-"* ]]; then
+              npm publish --tag next
+            else
+              npm publish
+            fi
 
   publish-github-release:
     docker:
@@ -140,12 +147,17 @@ jobs:
           name: Publishing Release on GitHub
           command: |
             VERSION=$(cat .circleci/dcgp-version)
-            ghr -t ${GITHUB_TOKEN} \
+            GITHUB_RELEASE_ARGS1=(-t ${GITHUB_TOKEN} \
             -u ${CIRCLE_PROJECT_USERNAME} \
             -r ${CIRCLE_PROJECT_REPONAME} \
-            -c ${CIRCLE_SHA1} \
-            -delete \
-            ${VERSION} ./lib/dcgp.wasm
+            -c ${CIRCLE_SHA1} -delete)
+            GITHUB_RELEASE_ARGS2=(${VERSION} ./lib/dcgp.wasm")
+
+            if [[ $VERSION == *"-"* ]]; then
+              ghr $GITHUB_RELEASE_ARGS1 -prerelease $GITHUB_RELEASE_ARGS2
+            else
+              ghr $GITHUB_RELEASE_ARGS1 $GITHUB_RELEASE_ARGS2
+            fi
 
   deploy-docs:
     docker:
