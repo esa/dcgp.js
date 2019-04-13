@@ -184,6 +184,7 @@ export function grid2D(array, width) {
  * Puts `array` on the memory stack.
  * Make sure to restore the stack when the operations requireing this data are done.
  *
+ * @private
  * @param {[number]} array Array of number to put on the memory stack.
  * @param {TypedArray} HEAP Typed memory representation to be used.
  * @returns {number} The pointer to the array in memory.

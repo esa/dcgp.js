@@ -15,17 +15,17 @@ npm install dcgp
 
 ### Usage
 ```js
-import { createInstance } from 'dcgp'
+import { initialise, KernelSet, Expression, algorithms } from 'dcgp'
 
-const dcgp = await createInstance(fetch('/dcgp.wasm') /* or ArrayBuffer or WebAssembly.Module */);
-const myKernelSet = new dcgp.KernelSet(['sum', 'diff', 'mul', 'pdiv']);
-const myExpression = new dcgp.Expression(2, 1, 2, 6, 5, 2, myKernelSet, 5);
+await initialise(fetch('/dcgp.wasm') /* or ArrayBuffer or WebAssembly.Module */);
+const myKernelSet = new KernelSet(['sum', 'diff', 'mul', 'div']);
+const myExpression = new Expression(2, 1, 2, 6, 5, 2, myKernelSet, 5);
 
 // some simple dataset: y = 2x + 2
-const inputs = [[0, 1], [1, 1], [2, 1], [3, 1], [4, 1]];
-const outputs = [[2], [4], [6], [8], [10]];
+const inputs = [[0, 1, 2, 3, 4]];
+const outputs = [[2, 4, 6, 8, 10]];
 
-const resultObj = dcgp.algorithms.onePlusLambda(myExpression, 5, 50, inputs, outputs);
+const { loss } = algorithms.muPlusLambda(myExpression, 2, 5, 50, inputs, outputs, [1]);
 
 // Free memory 
 myKernelSet.destroy()
