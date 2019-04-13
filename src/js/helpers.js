@@ -1,3 +1,5 @@
+import { getInstance } from './initialiser'
+
 // get the TextEncoder in browser and node.js
 function getEncoder(...args) {
   let EncoderClass
@@ -176,4 +178,26 @@ export function grid2D(array, width) {
   }
 
   return grid
+}
+
+/**
+ * Puts `array` on the memory stack.
+ * Make sure to restore the stack when the operations requireing this data are done.
+ *
+ * @param {[number]} array Array of number to put on the memory stack.
+ * @param {TypedArray} HEAP Typed memory representation to be used.
+ * @returns {number} The pointer to the array in memory.
+ */
+export function stackPutArray(array, HEAP) {
+  const {
+    exports: { stackAlloc },
+  } = getInstance()
+
+  const typedArray =
+    array.BYTES_PER_ELEMENT !== undefined ? array : new HEAP.constructor(array)
+
+  const pointer = stackAlloc(typedArray.byteLength)
+  setInHEAP(HEAP, typedArray, pointer)
+
+  return pointer
 }

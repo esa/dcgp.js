@@ -1,4 +1,4 @@
-import { setInHEAP, encodeStringArray, encodeString } from '../helpers'
+import { encodeStringArray, encodeString, stackPutArray } from '../helpers'
 import { getInstance } from '../initialiser'
 import Kernel from './Kernel'
 
@@ -35,7 +35,6 @@ class KernelSet {
     const {
       exports: {
         stackSave,
-        stackAlloc,
         stackRestore,
         _kernel_set_constructor_0,
         _kernel_set_constructor_1,
@@ -55,9 +54,7 @@ class KernelSet {
       const stackStart = stackSave()
 
       const encodedStrings = encodeStringArray(kernelNames)
-
-      const namesPointer = stackAlloc(encodedStrings.byteLength)
-      setInHEAP(U8, encodedStrings, namesPointer)
+      const namesPointer = stackPutArray(encodedStrings, U8)
 
       const receivedPointer = _kernel_set_constructor_1(
         namesPointer,
@@ -84,7 +81,6 @@ class KernelSet {
     const {
       exports: {
         stackSave,
-        stackAlloc,
         stackRestore,
         _kernel_set_push_back_0,
         _kernel_set_push_back_1,
@@ -104,8 +100,7 @@ class KernelSet {
     const stackStart = stackSave()
 
     const textArray = encodeString(kernel)
-    const textPointer = stackAlloc(textArray.byteLength)
-    setInHEAP(U8, textArray, textPointer)
+    const textPointer = stackPutArray(textArray, U8)
 
     _kernel_set_push_back_0(this.pointer, textPointer)
 

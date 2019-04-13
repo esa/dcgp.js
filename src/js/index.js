@@ -6,6 +6,9 @@ export { default as Kernel } from './classes/Kernel'
 import { default as muPlusLambda } from './algorithms/mu-plus-lambda'
 import { default as gradientDescent } from './algorithms/gradient-descent'
 
+/**
+ * @namespace Algorithm
+ */
 export const algorithms = {
   muPlusLambda,
   gradientDescent,
