@@ -151,7 +151,7 @@ jobs:
             -u ${CIRCLE_PROJECT_USERNAME} \
             -r ${CIRCLE_PROJECT_REPONAME} \
             -c ${CIRCLE_SHA1} -delete)
-            GITHUB_RELEASE_ARGS2=(${VERSION} ./lib/dcgp.wasm")
+            GITHUB_RELEASE_ARGS2=(${VERSION} ./lib/dcgp.wasm)
 
             if [[ $VERSION == *"-"* ]]; then
               ghr $GITHUB_RELEASE_ARGS1 -prerelease $GITHUB_RELEASE_ARGS2
