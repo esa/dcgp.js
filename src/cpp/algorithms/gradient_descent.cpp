@@ -7,12 +7,10 @@
 #include <audi/gdual.hpp>
 #include <audi/vectorized.hpp>
 
-#include "./helpers.hpp"
 #include "../utils/utils.hpp"
 
 using namespace dcgp;
 
-// typedef audi::gdual<double> gdual_d;
 typedef audi::gdual<audi::vectorized<double>> gdual_v;
 
 using namespace dcgp;
@@ -97,10 +95,10 @@ extern "C"
       for (size_t i = 0; i < xy_length; i++)
       {
         for (size_t j = 0; j < inputs_length; j++)
-          x_double[j][i] = x_array[i * inputs_length + j];
+          x_double[j][i] = x_array[j * xy_length + i];
 
         for (size_t j = 0; j < num_outputs; j++)
-          yt_double[j][i] = yt_array[i * num_outputs + j];
+          yt_double[j][i] = yt_array[j * xy_length + i];
       }
 
       for (size_t i = 0; i < inputs_length; i++)
@@ -132,9 +130,11 @@ extern "C"
     // update the provided constants to the learned constants
     // so that the javascript side can look at the values.
     for (size_t i = 0; i < constants_length; i++)
+    {
       // select index 0 because we can be sure
       // that the vector only contains one entry
       constants[i] = x[i + inputs_length].constant_cf()[0];
+    }
 
     return lowest_loss;
   };

@@ -126,7 +126,14 @@ jobs:
 
       - run:
           name: Publishing package on NPM
-          command: npm publish
+          command: |
+            VERSION=$(cat .circleci/dcgp-version)
+
+            if [[ $VERSION == *"-"* ]]; then
+              npm publish --tag next
+            else
+              npm publish
+            fi
 
   publish-github-release:
     docker:
@@ -140,12 +147,55 @@ jobs:
           name: Publishing Release on GitHub
           command: |
             VERSION=$(cat .circleci/dcgp-version)
-            ghr -t ${GITHUB_TOKEN} \
+            GITHUB_RELEASE_ARGS1=(-t ${GITHUB_TOKEN} \
             -u ${CIRCLE_PROJECT_USERNAME} \
             -r ${CIRCLE_PROJECT_REPONAME} \
-            -c ${CIRCLE_SHA1} \
-            -delete \
-            ${VERSION} ./lib/dcgp.wasm
+            -c ${CIRCLE_SHA1} -delete)
+            GITHUB_RELEASE_ARGS2=(${VERSION} ./lib/dcgp.wasm")
+
+            if [[ $VERSION == *"-"* ]]; then
+              ghr $GITHUB_RELEASE_ARGS1 -prerelease $GITHUB_RELEASE_ARGS2
+            else
+              ghr $GITHUB_RELEASE_ARGS1 $GITHUB_RELEASE_ARGS2
+            fi
+
+  deploy-docs:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+      - checkout
+
+      - restore_cache:
+          name: Restoring NPM packages from cache
+          keys:
+          - v64-npm-{{ checksum "package.json" }}
+          - v64-npm-
+
+      - run:
+          name: Install packages
+          command: npm install
+
+      - save_cache:
+          name: Saving NPM packages to cache
+          paths:
+            - node_modules
+          key: v64-npm-{{ checksum "package.json" }}
+
+      - run:
+          name: Building docs
+          command: npm run build:docs
+
+      - add_ssh_keys:
+          fingerprints:
+            - "f2:b2:00:3e:16:c3:67:5c:98:ae:2f:b4:07:14:f0:13"
+
+      - run:
+          name: Deploy app
+          command: |
+            git config --global user.email "$MAIL"
+            git config --global user.name "Mike Heddes"
+            npx gh-pages -d docs
 
 
 workflows:
@@ -171,6 +221,10 @@ workflows:
           requires:
             - build-js
             - checks
+          filters:
+            branches:
+              only: master
+      - deploy-docs:
           filters:
             branches:
               only: master

@@ -1,9 +1,9 @@
 import {
-  setInHEAP,
   decodeStringArray,
   encodeStringArray,
   flatten2D,
   transpose2D,
+  stackPutArray,
 } from '../helpers'
 import { getInstance } from '../initialiser'
 
@@ -166,26 +166,18 @@ class Expression {
     }
 
     const {
-      exports: {
-        stackSave,
-        stackAlloc,
-        stackRestore,
-        _expression_set_chromosome,
-      },
+      exports: { stackSave, stackRestore, _expression_set_chromosome },
       memory: { U32 },
     } = getInstance()
 
     const stackStart = stackSave()
 
-    const typedChromosome = new Uint32Array(chromosome)
-    const chromosomePointer = stackAlloc(typedChromosome.byteLength)
-
-    setInHEAP(U32, typedChromosome, chromosomePointer)
+    const chromosomePointer = stackPutArray(chromosome, U32)
 
     _expression_set_chromosome(
       this.pointer,
       chromosomePointer,
-      typedChromosome.length
+      chromosome.length
     )
 
     stackRestore(stackStart)
@@ -195,7 +187,7 @@ class Expression {
    * Calculates the result of the expression with `inputs`.
    *
    * @memberof Expression
-   * @param {...(number|[number])} inputs Input to the expression.
+   * @param {...(number|number[])} inputs Input to the expression.
    * @returns {number[]} The outputs of the expression.
    * @example
    * expression.evalutate(1, 2, 3)
@@ -215,7 +207,7 @@ class Expression {
     }
 
     const {
-      exports: { stackSave, stackAlloc, stackRestore, _expression_evaluate },
+      exports: { stackSave, stackRestore, _expression_evaluate },
       memory: { F64 },
     } = getInstance()
 
@@ -223,9 +215,7 @@ class Expression {
 
     const inputArray = structureEvaluationInputs(inputs)
 
-    const inputArrayF64 = new Float64Array(inputArray)
-    const inputPointer = stackAlloc(inputArrayF64.byteLength)
-    setInHEAP(F64, inputArrayF64, inputPointer)
+    const inputPointer = stackPutArray(inputArray, F64)
 
     const results = calculateEvaluation({
       outputs: this.outputs,
@@ -251,7 +241,7 @@ class Expression {
    */
   equations(...inputSymbols) {
     if (inputSymbols.length !== this.inputs) {
-      throw 'Number of inputSymbols needs to match' +
+      throw 'Number of inputSymbols needs to match ' +
         `the number of inputs of the expression which is ${this.inputs}`
     }
 
@@ -261,7 +251,6 @@ class Expression {
     const {
       exports: {
         stackSave,
-        stackAlloc,
         stackRestore,
         _delete_string,
         _expression_equation,
@@ -272,8 +261,7 @@ class Expression {
     const stackStart = stackSave()
 
     const encodedStrings = encodeStringArray(inputSymbols)
-    const stringsPointer = stackAlloc(encodedStrings.byteLength)
-    setInHEAP(U8, encodedStrings, stringsPointer)
+    const stringsPointer = stackPutArray(encodedStrings, U8)
 
     const resultPointer = _expression_equation(this.pointer, stringsPointer)
     const results = decodeStringArray(U8, resultPointer, this.outputs)
@@ -284,6 +272,54 @@ class Expression {
     return results
   }
 
+  /**
+   * Calculate the loss of the current expression between the provided inputs and the labels.
+   * Uses the Mean Square Error to calculate the loss.
+   *
+   * @memberof Expression
+   * @param {[[number]]} inputs Matrix with dimentions (inputs, points). The inputs should exclude the constants.
+   * @param {[[number]]} labels Matrix with dimentions (outputs, points).
+   * @param {number[]} [constants] Array with ephemeral constants to be used as inputs together with `inputs`.
+   * @returns {number} The loss.
+   */
+  loss(inputs, labels, constants = []) {
+    if (inputs.length + constants.length !== this.inputs) {
+      throw 'The number of provided inputs is not equal to the required inputs for this expression.'
+    }
+
+    if (inputs[0].length !== labels[0].length) {
+      throw 'input and output must be an array of the same length. ' +
+        `Lengths ${inputs.length} and ${labels.length} found.`
+    }
+
+    const {
+      memory: { F64 },
+      exports: { stackSave, stackRestore, _expression_loss },
+    } = getInstance()
+
+    const stackStart = stackSave()
+
+    const [inputsPointer, labelsPointer] = [inputs, labels].map(data => {
+      const flat = flatten2D(data)
+
+      return stackPutArray(flat, F64)
+    })
+
+    const constantsPointer =
+      constants.length !== 0 ? stackPutArray(constants, F64) : 0
+
+    const loss = _expression_loss(
+      this.pointer,
+      inputsPointer,
+      labelsPointer,
+      inputs[0].length,
+      constantsPointer,
+      constants.length
+    )
+
+    stackRestore(stackStart)
+    return loss
+  }
   // // Gets the idx of the active genes in the current chromosome(numbering is from 0)
   // getActiveGenes() {}
 
@@ -301,10 +337,6 @@ class Expression {
 
   // // Gets the upper bounds of the chromosome
   // getUpperBounds() {}
-
-  // // Computes the loss of the model on the data
-  // // The loss must be one of “MSE” for Mean Square Error and “CE” for Cross Entropy.
-  // loss(points, labels, loss_type = 'MSE') {}
 
   // // Mutates multiple genes within their allowed bounds.
   // mutate(indexes) {}

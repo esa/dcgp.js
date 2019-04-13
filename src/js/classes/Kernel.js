@@ -1,9 +1,9 @@
 import {
-  setInHEAP,
   encodeStringArray,
   decodeString,
   flatten2D,
   transpose2D,
+  stackPutArray,
 } from '../helpers'
 import { getInstance } from '../initialiser'
 
@@ -162,7 +162,7 @@ class Kernel {
     }
 
     const {
-      exports: { stackSave, stackAlloc, stackRestore, _kernel_evaluate },
+      exports: { stackSave, stackRestore, _kernel_evaluate },
       memory: { F64 },
     } = getInstance()
 
@@ -170,9 +170,7 @@ class Kernel {
 
     const inputArray = structureEvaluationInputs(inputs)
 
-    const inputArrayF64 = new Float64Array(inputArray)
-    const inputPointer = stackAlloc(inputArrayF64.byteLength)
-    setInHEAP(F64, inputArrayF64, inputPointer)
+    const inputPointer = stackPutArray(inputArray, F64)
 
     const result = calculateEvaluation({
       inputs,
@@ -205,22 +203,14 @@ class Kernel {
     }
 
     const {
-      exports: {
-        stackSave,
-        stackAlloc,
-        stackRestore,
-        _delete_string,
-        _kernel_equation,
-      },
+      exports: { stackSave, stackRestore, _delete_string, _kernel_equation },
       memory: { U8 },
     } = getInstance()
 
     const stackStart = stackSave()
 
     const encodedStrings = encodeStringArray(inputSymbols)
-
-    const stringsPointer = stackAlloc(encodedStrings.byteLength)
-    setInHEAP(U8, encodedStrings, stringsPointer)
+    const stringsPointer = stackPutArray(encodedStrings, U8)
 
     const resultPointer = _kernel_equation(
       this.pointer,

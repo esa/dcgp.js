@@ -32,7 +32,17 @@ expression<C> *convert_expression_type(
   kernel_names.reserve(kernels.size());
 
   for (size_t i = 0; i < kernels.size(); i++)
-    kernel_names.push_back(kernels[i].get_name());
+  {
+    std::string kernel_name = kernels[i].get_name();
+
+    // transform protected division to regular division because
+    // the gdual types do not support protected division.
+    if (kernel_name == "pdiv")
+      kernel_names.push_back("div");
+
+    else
+      kernel_names.push_back(kernel_name);
+  }
 
   kernel_set<C> converted_kernel_set(kernel_names);
 
@@ -49,4 +59,34 @@ expression<C> *convert_expression_type(
   converted->set(current->get());
 
   return converted;
+}
+
+template <typename T>
+void fill_vector_grid(
+    std::vector<std::vector<T>> &x_dest,
+    std::vector<std::vector<T>> &yt_dest,
+    const double *const &x_src,
+    const double *const &yt_src,
+    const unsigned &xy_length,
+    const unsigned &num_inputs,
+    const unsigned &num_outputs,
+    const double *const &constants,
+    const unsigned &constants_length)
+{
+  const unsigned inputs_length = num_inputs - constants_length;
+
+  for (size_t i = 0; i < xy_length; i++)
+  {
+    for (size_t j = 0; j < num_inputs; j++)
+    {
+      if (j >= inputs_length)
+        x_dest[i][j] = T(constants[j - inputs_length]);
+
+      else
+        x_dest[i][j] = T(x_src[j * xy_length + i]);
+    }
+
+    for (size_t j = 0; j < num_outputs; j++)
+      yt_dest[i][j] = T(yt_src[j * xy_length + i]);
+  }
 }
