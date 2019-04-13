@@ -8,7 +8,7 @@ const cwd = process.cwd()
 const INCLUDE_DIR = join('/usr', 'local', 'include')
 const LIBRARY_DIR = join('/usr', 'local', 'lib')
 const bitFile = 'dcgp.bc'
-const optimalisation = '-O0'
+const optimalisation = '-O3'
 
 const bitArgs = [
   `-I${INCLUDE_DIR}`,
