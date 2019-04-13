@@ -14,7 +14,8 @@
     "lint": "eslint src/**/*.js",
     "build": "npm run build:cpp && npm run build:js",
     "build:cpp": "node build.cpp.js",
-    "build:js": "rollup -c"
+    "build:js": "rollup -c",
+    "build:docs": "jsdoc -r ./src/js -d docs -R ./README.md || exit 0"
   },
   "keywords": [
     "dcgp",
