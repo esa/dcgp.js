@@ -7,7 +7,7 @@ yarn-error.log*
 
 lib/
 tmp/
-out/
+docs/
 cache/
 *.lock
 dcgp.js
