@@ -1,5 +1,6 @@
 #include <emscripten.h>
 #include <vector>
+#include <cmath>
 #include <functional>
 #include <algorithm>
 #include <iterator>
@@ -17,45 +18,94 @@ using namespace dcgp;
 using std::function;
 using std::vector;
 
+double calc_derivative(const gdual_v &loss, const unsigned &index)
+{
+  double dC(0.0);
+
+  std::string derivative_symbol = "dC" + std::to_string(index + 1);
+  audi::vectorized<double> dC_vect = loss.get_derivative({{derivative_symbol, 1}});
+
+  for (size_t j = 0; j < dC_vect.size(); j++)
+    dC += dC_vect[j];
+
+  dC /= static_cast<double>(dC_vect.size());
+
+  return dC;
+}
+
+double calc_loss(
+    expression<gdual_v> *const &self,
+    const vector<gdual_v> &inputs,
+    const vector<gdual_v> &labels,
+    gdual_v &loss_expression)
+{
+  loss_expression = self->loss(inputs, labels, expression<gdual_v>::loss_type::MSE);
+
+  double loss;
+
+  audi::vectorized<double> loss_vect = loss_expression.constant_cf();
+
+  for (size_t i = 0; i < loss_vect.size(); i++)
+    loss += loss_vect[i];
+
+  loss /= static_cast<double>(loss_vect.size());
+
+  return loss;
+}
+
 double gradient_descent(
     expression<gdual_v> *const self,
-    const double &learning_rate,
     const unsigned &max_steps,
     vector<gdual_v> &inputs,
     const vector<gdual_v> &labels,
     const unsigned &num_constants)
 {
+  gdual_v loss_expression;
+  double loss = calc_loss(self, inputs, labels, loss_expression);
+  double learning_rate(0.05);
   const unsigned constants_offset = inputs.size() - num_constants;
-  double loss(0.0);
+  vector<double> dC(num_constants);
 
-  gdual_v gdual_v_loss = self->loss(inputs, labels, expression<gdual_v>::loss_type::MSE);
+  if (!std::isfinite(loss)) return loss;
 
   for(size_t s = 0; s < max_steps; s++)
   {
-    loss = 0.0;
+    learning_rate *= 2.0;
 
-    for(size_t i = 0; i < num_constants; i++)
+    for (size_t i = 0; i < num_constants; i++)
     {
-      double dC(0.0);
+      dC[i] = calc_derivative(loss_expression, i);
 
-      audi::vectorized<double> dC_vect = gdual_v_loss.get_derivative({{"dC" + std::to_string(i + 1), 1}});
+      if (!std::isfinite(dC[i]))
+        return loss;
 
-      for (size_t j = 0; j < dC_vect.size(); j++)
-        dC += dC_vect[j];
-
-      dC /= static_cast<double>(dC_vect.size());
-
-      inputs[constants_offset + i] -= dC * learning_rate;
+      inputs[constants_offset + i] -= dC[i] * learning_rate;
     }
 
-    gdual_v_loss = self->loss(inputs, labels, expression<gdual_v>::loss_type::MSE);
+    double new_loss = calc_loss(self, inputs, labels, loss_expression);
 
-    audi::vectorized<double> loss_vect = gdual_v_loss.constant_cf();
+    bool new_loss_is_better = new_loss < loss;
+    bool lr_is_valid = learning_rate > 1e-10;
+    bool is_finite_loss = std::isfinite(new_loss);
+    while (lr_is_valid && (!is_finite_loss || !new_loss_is_better))
+    {
+      learning_rate /= 2.0;
 
-    for (size_t i = 0; i < loss_vect.size(); i++)
-      loss += loss_vect[i];
+      for (size_t i = 0; i < num_constants; i++)
+      {
+        // Add the gradient times the updated learning rate because
+        // that is the same as removing the already added gradient
+        // step and adding the updated fraction.
+        inputs[constants_offset + i] += dC[i] * learning_rate;
+      }
 
-    loss /= static_cast<double>(loss_vect.size());
+      new_loss = calc_loss(self, inputs, labels, loss_expression);
+      new_loss_is_better = new_loss < loss;
+      lr_is_valid = learning_rate > 1e-10;
+      is_finite_loss = std::isfinite(new_loss);
+    }
+
+    loss = new_loss;
 
     if (loss < 1e-14)
       break;
@@ -68,7 +118,6 @@ extern "C"
 {
   double EMSCRIPTEN_KEEPALIVE algorithm_gradient_descent(
       expression<double> *const self,
-      const double learning_rate,
       const unsigned max_steps,
       const double *const x_array,
       const double *const yt_array,
@@ -120,7 +169,6 @@ extern "C"
 
     double lowest_loss = gradient_descent(
         gdual_v_expression,
-        learning_rate,
         max_steps,
         x, yt,
         constants_length);

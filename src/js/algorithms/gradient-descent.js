@@ -9,7 +9,6 @@ import { getInstance } from '../initialiser'
  * @function gradientDescent
  * @memberof Algorithm
  * @param {Expression} expression Expression to evolve the constants of.
- * @param {number} learningRate Rate at which the constants will update.
  * @param {number} maxSteps Maximum amount of steps before the algorithm stop.
  * The algorithm could stop before `maxSteps` if a loss of lower than 1e-13 is reached.
  * @param {[[number]]} inputs Matrix with dimentions (inputs, points). The inputs should exclude the constants.
@@ -18,14 +17,7 @@ import { getInstance } from '../initialiser'
  * The gradient descent algorithm will learn the constants to minimize the Mean Squared Error.
  * @returns {object}
  */
-function gradientDescent(
-  expression,
-  learningRate,
-  maxSteps,
-  inputs,
-  labels,
-  constants = []
-) {
+function gradientDescent(expression, maxSteps, inputs, labels, constants = []) {
   if (inputs.length + constants.length !== expression.inputs) {
     throw 'The number of provided inputs is not equal to the required inputs for this expression.'
   }
@@ -53,7 +45,6 @@ function gradientDescent(
 
   const loss = _algorithm_gradient_descent(
     expression.pointer,
-    learningRate,
     maxSteps,
     inputsPointer,
     labelsPointer,
