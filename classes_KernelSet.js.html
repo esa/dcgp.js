@@ -26,7 +26,8 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import { encodeStringArray, encodeString, stackPutArray } from '../helpers'
+            <pre class="prettyprint source linenums"><code>import Base from './Base'
+import { encodeStrings, stackPutArray } from '../helpers'
 import { getInstance } from '../initialiser'
 import Kernel from './Kernel'
 
@@ -44,9 +45,9 @@ const kernelNameOptions = {
 
 /**
  * @class
- * @param {[String]} kernelNames Names of the kernels to add to the set.
+ * @param {...String } [kernelNames] Names of the kernels to add to the set.
  */
-class KernelSet {
+class KernelSet extends Base {
   static SUM = kernelNameOptions.SUM
   static DIFF = kernelNameOptions.DIFF
   static MUL = kernelNameOptions.MUL
@@ -59,29 +60,31 @@ class KernelSet {
 
   static ALL_KERNELS = Object.values(kernelNameOptions)
 
-  constructor(kernelNames) {
+  /**
+   * @param {...String } [kernelNames] Names of the kernels to add to the set.
+   */
+  constructor(...kernelNames) {
+    super()
+
     const {
-      exports: {
-        stackSave,
-        stackRestore,
-        _kernel_set_constructor_0,
-        _kernel_set_constructor_1,
-      },
+      exports: { _kernel_set_constructor_0, _kernel_set_constructor_1 },
       memory: { U8 },
     } = getInstance()
 
     if (kernelNames) {
-      if (!Array.isArray(kernelNames)) {
-        throw 'kernelNames is not an array'
-      }
+      const options = Object.values(kernelNameOptions)
 
-      if (!kernelNames.every(i => typeof i === 'string')) {
-        throw 'Every entry of kernelNames must be a string'
-      }
+      kernelNames.forEach(kernelName => {
+        if (options.indexOf(kernelName) === -1) {
+          throw new TypeError(
+            `Provided kernelName ${kernelName} is not a valid kernel identifier.`
+          )
+        }
+      })
 
-      const stackStart = stackSave()
+      const stackStart = this._stackSave()
 
-      const encodedStrings = encodeStringArray(kernelNames)
+      const encodedStrings = encodeStrings(...kernelNames)
       const namesPointer = stackPutArray(encodedStrings, U8)
 
       const receivedPointer = _kernel_set_constructor_1(
@@ -91,7 +94,7 @@ class KernelSet {
 
       Object.defineProperty(this, 'pointer', { value: receivedPointer })
 
-      stackRestore(stackStart)
+      this._stackRestore(stackStart)
       return
     }
 
@@ -106,13 +109,10 @@ class KernelSet {
    * @param {(string|Kernel)} kernel The kernel to add by name or instance.
    */
   push(kernel) {
+    this._throwIfDestroyed()
+
     const {
-      exports: {
-        stackSave,
-        stackRestore,
-        _kernel_set_push_back_0,
-        _kernel_set_push_back_1,
-      },
+      exports: { _kernel_set_push_back_0, _kernel_set_push_back_1 },
       memory: { U8 },
     } = getInstance()
 
@@ -121,18 +121,22 @@ class KernelSet {
       return
     }
 
-    if (typeof kernel !== 'string') {
-      throw 'kernel must be a string'
+    const options = Object.values(kernelNameOptions)
+
+    if (options.indexOf(kernel) === -1) {
+      throw new TypeError(
+        `Provided kernel is not an instance of a Kernel or a valid kernel identifier.`
+      )
     }
 
-    const stackStart = stackSave()
+    const stackStart = this._stackSave()
 
-    const textArray = encodeString(kernel)
+    const textArray = encodeStrings(kernel)
     const textPointer = stackPutArray(textArray, U8)
 
     _kernel_set_push_back_0(this.pointer, textPointer)
 
-    stackRestore(stackStart)
+    this._stackRestore(stackStart)
   }
 
   /**
@@ -140,18 +144,14 @@ class KernelSet {
    * @type {[Kernel]}
    */
   get kernels() {
+    this._throwIfDestroyed()
+
     const {
-      exports: {
-        stackSave,
-        stackAlloc,
-        stackRestore,
-        _kernel_set_num_kernels,
-        _kernel_set_get_kernels,
-      },
+      exports: { _kernel_set_num_kernels, _kernel_set_get_kernels },
       memory: { U32 },
     } = getInstance()
 
-    const stackStart = stackSave()
+    const stackStart = this._stackSave()
 
     const numKernels = _kernel_set_num_kernels(this.pointer)
 
@@ -159,7 +159,9 @@ class KernelSet {
       return []
     }
 
-    const pointersArrPointer = stackAlloc(U32.BYTES_PER_ELEMENT * numKernels)
+    const pointersArrPointer = this._stackAlloc(
+      U32.BYTES_PER_ELEMENT * numKernels
+    )
 
     _kernel_set_get_kernels(this.pointer, pointersArrPointer)
 
@@ -172,10 +174,10 @@ class KernelSet {
     const kernels = new Array(numKernels)
 
     for (let index = 0; index &lt; kernelPointers.length; index++) {
-      kernels[index] = new Kernel(null, null, null, kernelPointers[index])
+      kernels[index] = new Kernel(null, kernelPointers[index])
     }
 
-    stackRestore(stackStart)
+    this._stackRestore(stackStart)
 
     return kernels
   }
@@ -188,13 +190,24 @@ class KernelSet {
    * @returns {Kernel} The kernel at `index` of the set.
    */
   kernel(index) {
+    this._throwIfDestroyed()
+
     const {
-      exports: { _kernel_set_get_kernel },
+      exports: { _kernel_set_get_kernel, _kernel_set_num_kernels },
     } = getInstance()
+
+    const numKernels = _kernel_set_num_kernels(this.pointer)
+    const maxIndex = numKernels - 1
+
+    if (index > maxIndex) {
+      throw new RangeError(
+        `Provided index ${index} but the maximal index is ${maxIndex}.`
+      )
+    }
 
     const pointer = _kernel_set_get_kernel(this.pointer, index)
 
-    return new Kernel(null, null, null, pointer)
+    return new Kernel(null, pointer)
   }
 
   /**
@@ -204,6 +217,8 @@ class KernelSet {
    * @type {string[]} The names of the Kernels in the set.
    */
   get names() {
+    this._throwIfDestroyed()
+
     const names = this.kernels.map(kernel => {
       const name = kernel.name
 
@@ -217,7 +232,8 @@ class KernelSet {
 
   /**
    * @readonly
-   * @private
+   * @memberof KernelSet
+   * @type {string} The string 'KernelSet'
    */
   get [Symbol.toStringTag]() {
     return 'KernelSet'
@@ -228,6 +244,8 @@ class KernelSet {
    * @memberof KernelSet
    */
   clear() {
+    this._throwIfDestroyed()
+
     const {
       exports: { _kernel_set_clear },
     } = getInstance()
@@ -240,11 +258,15 @@ class KernelSet {
    * @memberof KernelSet
    */
   destroy() {
+    this._throwIfDestroyed()
+
     const {
       exports: { _kernel_set_destroy },
     } = getInstance()
 
     _kernel_set_destroy(this.pointer)
+
+    super.destroy()
   }
 }
 
@@ -265,7 +287,7 @@ export default KernelSet
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Apr 17 2019 10:47:15 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Apr 23 2019 13:52:04 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

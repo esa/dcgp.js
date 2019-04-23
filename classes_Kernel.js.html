@@ -26,75 +26,75 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import {
-  encodeStringArray,
-  decodeString,
+            <pre class="prettyprint source linenums"><code>import Base from './Base'
+import {
+  encodeStrings,
+  decodeStrings,
   flatten2D,
   transpose2D,
   stackPutArray,
+  isArray,
+  isString,
+  containsOneType,
+  containsNumbersOnly,
 } from '../helpers'
 import { getInstance } from '../initialiser'
 
 function structureEvaluationInputs(inputs) {
-  if (Array.isArray(inputs[0])) {
+  if (isArray(inputs[0])) {
     return flatten2D(transpose2D(inputs))
   }
 
   return inputs
 }
 
-// TODO: refactor function
-function calculateEvaluation({ inputs, inputPointer, evaluate }) {
+function calculateEvaluation(inputs, inputPointer, evaluate) {
   const {
     memory: { F64 },
   } = getInstance()
-  const numInputs = inputs.length
 
-  if (Array.isArray(inputs[0])) {
-    const inputArrayLength = inputs[0].length
-
-    const results = []
-    const lengthOfInput = 1
-
-    for (let i = 0; i &lt; inputArrayLength; i++) {
-      const result = evaluate(
-        inputPointer + i * inputs.length * F64.BYTES_PER_ELEMENT,
-        numInputs,
-        lengthOfInput
+  if (isArray(inputs[0])) {
+    const results = Array(inputs[0].length)
+      .fill(0)
+      .map((val, i) =>
+        evaluate(
+          inputPointer + i * inputs.length * F64.BYTES_PER_ELEMENT,
+          inputs.length
+        )
       )
-
-      results.push(result)
-    }
 
     return results
   } else {
-    const result = evaluate(inputPointer, numInputs)
+    const results = evaluate(inputPointer, inputs.length)
 
-    return result
+    return results
   }
 }
 
 /**
  * @class
  * @property {string} name The name of the kernel.
- * @param {(...number) => number} operatorFunction Function calculating the result of the kernel.
- * @param {(...string) => string} stringFunction Function creating the equation of the kernel.
  * @param {string} name Name of the Kernel.
  * @param {number} [pointer] Pointer to an existing Kernel in memory.
  */
-class Kernel {
-  constructor(operatorFunction, stringFunction, name, pointer = null) {
+class Kernel extends Base {
+  /**
+   * @param { string } name Name of the Kernel.
+   * @param { number } [pointer] Pointer to an existing Kernel in memory.
+   */
+  constructor(name, pointer = null) {
+    super()
+
     if (pointer) {
       const {
         exports: { _delete_string, _kernel_name },
-        memory: { U8 },
       } = getInstance()
 
       Object.defineProperty(this, 'pointer', { value: pointer })
 
       const namePointer = _kernel_name(this.pointer)
 
-      const name = decodeString(U8, namePointer)
+      const [name] = decodeStrings(namePointer)
 
       Object.defineProperty(this, 'name', { value: name })
 
@@ -102,77 +102,15 @@ class Kernel {
       return
     }
 
-    // When compiling with optimizations (e.g. -O3) this functionality breaks.
-    // Without comiler optimalizations (-O0) the commented out code works and
-    // can be used to creat a kernel with a custom JS function.
-    throw 'Initializing a kernel with JavaScript functions is not supported.' +
-      'For now the Kernel can only be constructed with a pointer.'
-
-    /*
-    const wrappedOperationFunc = (arrayPointer, length) => {
-      const inputArray = new Float64Array(HEAPF64.buffer, arrayPointer, length);
-
-      return operatorFunction(inputArray);
-    };
-
-    const wrappedStringFunc = (arrayPointer, lengthsPointer, length, outputPointer) => {
-      const lengthsArray = new Uint16Array(
-        HEAPU16.buffer,
-        lengthsPointer,
-        length
-      );
-
-      const inputArray = new Array(length);
-      let shifted = 0;
-
-      for (let index = 0; index &lt; length; index++) {
-        const textIntArray = new Uint8Array(
-          HEAPU8.buffer,
-          shifted + arrayPointer,
-          lengthsArray[index]
-        );
-
-        inputArray[index] = decoder.decode(textIntArray);
-        shifted += lengthsArray[index];
-      }
-
-      const result = stringFunction(inputArray);
-      const resultIntArray = encoder.encode(result + '\0');
-      setInHEAP(HEAPU8, resultIntArray, outputPointer);
-    };
-
-    // This can cause an error based on the RESERVED_FUNCTION_POINTERS compile setting
-    const operationPointer = addFunction(wrappedOperationFunc);
-    const printPointer = addFunction(wrappedStringFunc);
-
-    Object.defineProperty(this, "functionPointers", {
-      value: [operationPointer, printPointer]
-    });
-
-    const nameIntArray = encoder.encode(name + '\0');
-    const namePointer = stackAlloc(nameIntArray.byteLength);
-    setInHEAP(HEAPU8, nameIntArray, namePointer);
-
-    const receivedPointer = _embind_kernel_0(
-      operationPointer,
-      printPointer,
-      namePointer,
-      nameIntArray.length
-    );
-
-    Object.defineProperty(this, "pointer", { value: receivedPointer });
-    Object.defineProperty(this, "name", { value: name });
-
-    stackRestore(stackStart);
-    */
+    throw new Error('Kernel can currently only be initialised with a pointer.')
   }
 
   /**
    * Calculates the result of the kernel with `inputs`.
    *
    * @memberof Kernel
-   * @param {...(number|[number])} inputs Input to the kernel. Must be at least two.
-   * @returns {(number|[number])} The output of the kernel.
+   * @param {...(number|number[])} inputs Input to the kernel. Must be at least two.
+   * @returns {(number|number[])} The output of the kernel.
    * @example
    * kernel.evalutate(1, 2, 3)
    * // could for example return 2
@@ -181,32 +119,37 @@ class Kernel {
    * // could for example return [3, 2]
    */
   evaluate(...inputs) {
+    this._throwIfDestroyed()
+
     if (inputs.length &lt; 2) {
-      throw 'Must at least provide two inputs'
+      throw new Error('Must at least provide two inputs to evaluate.')
     }
 
-    if (!inputs.every(i => typeof i === 'number' || Array.isArray(i))) {
-      throw 'Every entry of inputs must be a number or an array with numbers'
+    if (!containsOneType(inputs) || !containsNumbersOnly(inputs)) {
+      throw new TypeError(
+        'Provided inputs must all be of the same type, ' +
+          'Array.&lt;Number> or Number but not mixed.'
+      )
     }
 
     const {
-      exports: { stackSave, stackRestore, _kernel_evaluate },
+      exports: { _kernel_evaluate },
       memory: { F64 },
     } = getInstance()
 
-    const stackStart = stackSave()
+    const stackStart = this._stackSave()
 
     const inputArray = structureEvaluationInputs(inputs)
 
     const inputPointer = stackPutArray(inputArray, F64)
 
-    const result = calculateEvaluation({
+    const result = calculateEvaluation(
       inputs,
       inputPointer,
-      evaluate: _kernel_evaluate.bind(null, this.pointer),
-    })
+      _kernel_evaluate.bind(null, this.pointer)
+    )
 
-    stackRestore(stackStart)
+    this._stackRestore(stackStart)
 
     return result
   }
@@ -222,22 +165,24 @@ class Kernel {
    * // could for example return ['(a+b)']
    */
   equation(...inputSymbols) {
+    this._throwIfDestroyed()
+
     if (inputSymbols.length &lt; 2) {
-      throw 'Must at least provide 2 inputSymbols'
+      throw new Error('Must at least provide two inputs to evaluate.')
     }
 
-    if (!inputSymbols.every(i => typeof i === 'string')) {
-      throw 'Every entry of inputSymbols must be a string'
+    if (!inputSymbols.every(isString)) {
+      throw new TypeError('Provided inputSymbols must be strings.')
     }
 
     const {
-      exports: { stackSave, stackRestore, _delete_string, _kernel_equation },
+      exports: { _delete_string, _kernel_equation },
       memory: { U8 },
     } = getInstance()
 
-    const stackStart = stackSave()
+    const stackStart = this._stackSave()
 
-    const encodedStrings = encodeStringArray(inputSymbols)
+    const encodedStrings = encodeStrings(...inputSymbols)
     const stringsPointer = stackPutArray(encodedStrings, U8)
 
     const resultPointer = _kernel_equation(
@@ -246,17 +191,17 @@ class Kernel {
       inputSymbols.length
     )
 
-    const result = decodeString(U8, resultPointer)
+    const [result] = decodeStrings(resultPointer)
 
     _delete_string(resultPointer)
-    stackRestore(stackStart)
+    this._stackRestore(stackStart)
 
     return result
   }
 
   /**
    * @readonly
-   * @private
+   * @memberof Kernel
    */
   get [Symbol.toStringTag]() {
     return 'Kernel'
@@ -267,19 +212,15 @@ class Kernel {
    * @memberof Kernel
    */
   destroy() {
+    this._throwIfDestroyed()
+
     const {
       exports: { _kernel_destroy },
     } = getInstance()
 
-    // Use this to remove the custom functions if used.
-    // See comment at constructor for more info.
-    // if (this.functionPointers) {
-    //   this.functionPointers.forEach(pointer => {
-    //     removeFunction(pointer);
-    //   });
-    // }
-
     _kernel_destroy(this.pointer)
+
+    super.destroy()
   }
 }
 
@@ -300,7 +241,7 @@ export default Kernel
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Apr 17 2019 10:47:15 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Apr 23 2019 13:52:04 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
