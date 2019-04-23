@@ -4,22 +4,25 @@ const { spawn } = require('child_process')
 const { join } = require('path')
 const glob = require('glob')
 
+const DEBUG = process.env.NODE_ENV === 'development'
+
 const cwd = process.cwd()
 const INCLUDE_DIR = join('/usr', 'local', 'include')
 const LIBRARY_DIR = join('/usr', 'local', 'lib')
 const bitFile = 'dcgp.bc'
-const optimalisation = '-O3'
+const optimalisation = DEBUG ? '-O0' : '-O3'
 
 const bitArgs = [
   `-I${INCLUDE_DIR}`,
   '-I/usr/include/eigen3',
   '-std=c++11',
-  '--cache',
-  join(cwd, 'cache'),
+  '-g4',
   optimalisation,
   '-o',
   bitFile,
-]
+  DEBUG && '--source-map-base',
+  DEBUG && 'http://localhost:8080/',
+].filter(item => !!item)
 
 const wasmArgs = [
   bitFile,
@@ -36,13 +39,13 @@ const wasmArgs = [
   join(LIBRARY_DIR, 'libboost_wserialization.so'),
   optimalisation,
   '-g4',
-  '--cache',
-  join(cwd, 'cache'),
   '--pre-js',
   join(cwd, 'src', 'js', 'pre.js'),
   '-o',
   'dcgp.js',
-]
+  DEBUG && '--source-map-base',
+  DEBUG && 'http://localhost:8080/',
+].filter(item => !!item)
 
 const attachOutput = (commandClass, command) =>
   new Promise((resolve, reject) => {
@@ -77,11 +80,20 @@ const build = async files => {
   }
 }
 
-glob('src/cpp/**/*.cpp', null, (error, files) => {
-  if (error) {
-    throw new Error(error)
-  }
+const resolveCppFiles = () =>
+  new Promise((resolve, reject) => {
+    glob('src/cpp/**/*.cpp', null, (error, files) => {
+      if (error) {
+        reject(error)
+        return
+      }
+      resolve(files)
+    })
+  })
 
-  // error is not necessarily an error.
-  build(files).catch(error => console.warn(error))
-})
+const main = async () => {
+  const files = await resolveCppFiles()
+  await build(files)
+}
+
+main().catch(error => console.warn(error))

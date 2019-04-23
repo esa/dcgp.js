@@ -2,7 +2,7 @@
 const plugins = [
   '@babel/plugin-proposal-class-properties',
   '@babel/plugin-proposal-object-rest-spread',
-];
+]
 
 module.exports = api => {
   if (api.env('test')) {
@@ -18,7 +18,7 @@ module.exports = api => {
         ],
       ],
       plugins,
-    };
+    }
   }
 
   return {
@@ -26,12 +26,12 @@ module.exports = api => {
       [
         '@babel/preset-env',
         {
-          exclude: ['transform-async-to-generator', 'transform-regenerator'],
           modules: false,
-          loose: true,
+          targets:
+            'last 2 version and > 0.2% in US and > 0.5%, not ie <= 11, not dead',
         },
       ],
     ],
     plugins,
-  };
-};
+  }
+}

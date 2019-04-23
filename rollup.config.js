@@ -1,9 +1,12 @@
+/* eslint-env node */
 import babel from 'rollup-plugin-babel'
 import copy from 'rollup-plugin-copy'
 import resolve from 'rollup-plugin-node-resolve'
 import pkg from './package.json'
 import fs from 'fs'
 import path from 'path'
+
+const DEBUG = process.env.NODE_ENV === 'development'
 
 function emptyDir(outputDir) {
   return {
@@ -43,8 +46,7 @@ export default {
     resolve(),
     babel(),
     copy({
-      'dcgp.wasm': 'lib/dcgp.wasm',
-      'src/index.html': 'lib/index.html',
+      targets: ['dcgp.wasm', 'dcgp.wasm.map', 'dcgp.wast', 'src/index.html'],
     }),
   ],
   output: [
@@ -53,6 +55,7 @@ export default {
       file: 'lib/dcgp.umd.js',
       name: 'dcgp',
       exports: 'named',
+      sourcemap: DEBUG,
     },
     {
       format: 'es',

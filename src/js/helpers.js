@@ -30,7 +30,7 @@ function getDecoder(...args) {
   } else if (typeof require !== 'undefined') {
     // eslint-disable-next-line no-undef
     const util = require('util')
-    DecoderClass = util.TextEncoder
+    DecoderClass = util.TextDecoder
   } else {
     throw new Error(
       'The TextEncoder class is not available in your environment'
@@ -44,48 +44,37 @@ export const encoder = getEncoder()
 export const decoder = getDecoder('utf-8')
 
 /**
- * Encodes a strings array in a c_string array.
+ * Encodes strings as an array of c_strings.
  *
  * @private
- * @param {[string]} stringArray Array of strings to encode.
- * @returns {Uint8Array} Encoded strings.
+ * @param {...string} strings Strings to encode.
+ * @returns {Uint8Array} Encoded strings seperated by NULL characters.
  */
-export function encodeStringArray(stringArray) {
-  const concatedStrings = stringArray.join('\0') + '\0'
+export function encodeStrings(...strings) {
+  const concatedStrings = strings.join('\0') + '\0'
 
   const stringsIntArray = encoder.encode(concatedStrings)
   return stringsIntArray
 }
 
 /**
- * Encodes a string as c_string.
+ * Decodes a c_string array from the shared memory with WebAssembly.
  *
  * @private
- * @param {string} string String to encode.
- * @returns {Uint8Array} Encoded string.
- */
-export function encodeString(string) {
-  const concatedStrings = string + '\0'
-
-  const stringIntArray = encoder.encode(concatedStrings)
-  return stringIntArray
-}
-
-/**
- * Decodes a c_string array from the shared memery with WebAssembly.
- *
- * @private
- * @param {TypedArray} heap Representation of the shared memory with WebAssembly.
  * @param {number} pointer Pointer to the start of the string.
- * @param {number} numStrings Number of strings in the array.
- * @returns {[string]} Decoded strings.
+ * @param {number} [numStrings=1] Number of strings in the array.
+ * @returns {[string]} Decoded JavaScript strings.
  */
-export function decodeStringArray(heap, pointer, numStrings) {
+export function decodeStrings(pointer, numStrings = 1) {
+  const {
+    memory: { U8 },
+  } = getInstance()
+
   let foundNullChars = 0
   let totalLength
 
-  for (let index = pointer; index < heap.length; index++) {
-    if (heap[index] === 0) {
+  for (let index = pointer; index < U8.length; index++) {
+    if (U8[index] === 0) {
       foundNullChars++
 
       if (foundNullChars === numStrings) {
@@ -95,34 +84,11 @@ export function decodeStringArray(heap, pointer, numStrings) {
     }
   }
 
-  const stringsIntArray = new Uint8Array(heap.buffer, pointer, totalLength)
+  const stringsIntArray = new Uint8Array(U8.buffer, pointer, totalLength)
   const concatedStrings = decoder.decode(stringsIntArray)
 
   const stringArray = concatedStrings.split('\0')
   return stringArray
-}
-
-/**
- * Decodes a c_string from the shared memery with WebAssembly.
- *
- * @private
- * @param {TypedArray} heap Representation of the shared memory with WebAssembly.
- * @param {number} pointer Pointer to the start of the string.
- * @returns {string} Decoded string.
- */
-export function decodeString(heap, pointer) {
-  let totalLength
-
-  for (let index = pointer; index < heap.length; index++) {
-    if (heap[index] === 0) {
-      totalLength = index - pointer
-      break
-    }
-  }
-
-  const stringsIntArray = new Uint8Array(heap.buffer, pointer, totalLength)
-  const decodedString = decoder.decode(stringsIntArray)
-  return decodedString
 }
 
 export function setInHEAP(HEAP, typedArray, pointer) {
@@ -202,3 +168,25 @@ export function stackPutArray(array, HEAP) {
 
   return pointer
 }
+
+export const isNumber = value => typeof value === 'number'
+export const isString = value => typeof value === 'string'
+export const isArray = value => Array.isArray(value)
+
+export const containsOneType = array =>
+  array.reduce((acc, current, i) => {
+    if (i === 0) return acc
+
+    const hasSameTypeAsPrevious = typeof current === typeof array[i - 1]
+
+    return acc && hasSameTypeAsPrevious
+  }, true)
+
+export const containsNumbersOnly = array =>
+  array.every(item => {
+    if (isArray(item)) {
+      return item.every(isNumber)
+    }
+
+    return isNumber(item)
+  })

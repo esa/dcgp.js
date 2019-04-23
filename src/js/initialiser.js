@@ -41,19 +41,19 @@ import dcgpInitializer, { instantiateModule } from '../../dcgp'
  * @type {Instance}
  * @private
  */
-let semiGlobalInstance
+let privateGlobalInstance
 
 /**
  * @private
  * @returns {Instance}
- * @throws Dcgp.js is not initialised.
+ * @throws dcgp.js is not initialised.
  */
 export const getInstance = () => {
-  if (semiGlobalInstance) {
-    return semiGlobalInstance
+  if (privateGlobalInstance) {
+    return privateGlobalInstance
   }
 
-  throw 'initialise must be called first.'
+  throw new Error('dcgp is not initialised. initialise must be called first.')
 }
 
 function getTypedMemory(memory) {
@@ -84,8 +84,9 @@ function getFetchAndArrayBuffer(fetchOrArrayBuffer) {
   } else if (fetchOrArrayBuffer instanceof Promise) {
     fetchInstance = fetchOrArrayBuffer
   } else {
-    throw new Error(
-      'dcgp must be initialised with an ArrayBuffer or a fetch request of the dcgp.wasm file'
+    throw new TypeError(
+      'dcgp must be initialised with an ArrayBuffer, a fetch request ' +
+        'or an WebAssembly.Module of the dcgp.wasm file.'
     )
   }
 
@@ -116,12 +117,16 @@ async function getModuleAndInstance(wasmInput) {
  * @returns {Promise<WebAssembly.Module>}
  */
 export async function initialise(wasmInput) {
+  if (privateGlobalInstance) {
+    throw new Error('dcgp is already initialised.')
+  }
+
   const { module, instance } = await getModuleAndInstance(wasmInput)
 
   const typedMemory = getTypedMemory(instance.memory)
   Object.assign(instance.memory, typedMemory)
 
-  semiGlobalInstance = instance
+  privateGlobalInstance = instance
 
   return module
 }
