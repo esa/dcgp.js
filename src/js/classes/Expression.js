@@ -1,15 +1,18 @@
+import Base from './Base'
 import {
-  decodeStringArray,
-  encodeStringArray,
+  decodeStrings,
+  encodeStrings,
   flatten2D,
   transpose2D,
   stackPutArray,
+  isArray,
+  isNumber,
+  isString,
+  containsOneType,
+  containsNumbersOnly,
 } from '../helpers'
 import { getInstance } from '../initialiser'
-
-function randomSeed() {
-  return Math.round(Math.random() * 10000)
-}
+import KernelSet from './KernelSet'
 
 function structureEvaluationInputs(inputs) {
   if (Array.isArray(inputs[0])) {
@@ -19,43 +22,35 @@ function structureEvaluationInputs(inputs) {
   return inputs
 }
 
-// TODO: refactor function
-function calculateEvaluation({ inputs, inputPointer, evaluate, outputs }) {
+function calculateEvaluation(inputs, inputPointer, evaluate, outputs) {
   const {
     exports: { _delete_double_array },
     memory: { F64 },
   } = getInstance()
 
-  if (Array.isArray(inputs[0])) {
-    const inputArrayLength = inputs[0].length
+  if (isArray(inputs[0])) {
+    const results = Array(inputs[0].length)
+      .fill(0)
+      .map((val, i) => {
+        const resultPointer = evaluate(
+          inputPointer + i * inputs.length * F64.BYTES_PER_ELEMENT
+        )
 
-    const results = []
-    const lengthOfInput = 1
+        const typedResult = new Float64Array(F64.buffer, resultPointer, outputs)
+        const result = Array.from(typedResult)
 
-    for (let i = 0; i < inputArrayLength; i++) {
-      const resultPointer = evaluate(
-        inputPointer + i * inputs.length * F64.BYTES_PER_ELEMENT,
-        lengthOfInput
-      )
-
-      const typedResult = new Float64Array(F64.buffer, resultPointer, outputs)
-
-      results.push(Array.from(typedResult))
-
-      _delete_double_array(resultPointer)
-    }
+        _delete_double_array(resultPointer)
+        return result
+      })
 
     return transpose2D(results)
   } else {
-    const lengthOfInput = 1
-    const resultPointer = evaluate(inputPointer, lengthOfInput)
+    const resultPointer = evaluate(inputPointer)
 
     const typedResult = new Float64Array(F64.buffer, resultPointer, outputs)
-
     const results = Array.from(typedResult)
 
     _delete_double_array(resultPointer)
-
     return results
   }
 }
@@ -76,7 +71,17 @@ function calculateEvaluation({ inputs, inputPointer, evaluate, outputs }) {
  * @param {KernelSet} kernelSet Instances with the kernels to be used in the expression.
  * @param {number} seed Pseudo random number generator seed.
  */
-class Expression {
+class Expression extends Base {
+  /**
+   * @param {number} inputs Number of inputs.
+   * @param {number} outputs Number of outputs
+   * @param {number} rows Number of rows.
+   * @param {number} columns Number of columns.
+   * @param {number} levelsBack Maximum number of levels back the connections can be.
+   * @param {number} arity The number of incomming connections of a node.
+   * @param {KernelSet} kernelSet Instances with the kernels to be used in the expression.
+   * @param {number} seed Pseudo random number generator seed.
+   */
   constructor(
     inputs,
     outputs,
@@ -85,13 +90,33 @@ class Expression {
     levelsBack,
     arity,
     kernelSet,
-    seed = randomSeed
+    seed
   ) {
+    super()
+
     const {
       exports: { _expression_constructor },
     } = getInstance()
 
-    const calculatedSeed = typeof seed === 'function' ? seed() : seed
+    const hasValidArguments = [
+      inputs,
+      outputs,
+      rows,
+      columns,
+      levelsBack,
+      arity,
+      seed,
+    ].every(isNumber)
+
+    if (!hasValidArguments) {
+      throw new TypeError(
+        'Arguments outputs, rows, columns, levelsBack, arity and seed must all be numbers'
+      )
+    }
+
+    if (!(kernelSet instanceof KernelSet)) {
+      throw new TypeError('kernelSet must be an instance of KernelSet')
+    }
 
     const pointer = _expression_constructor(
       inputs,
@@ -101,7 +126,7 @@ class Expression {
       levelsBack,
       arity,
       kernelSet.pointer,
-      calculatedSeed
+      seed
     )
 
     Object.defineProperties(this, {
@@ -112,7 +137,7 @@ class Expression {
       columns: { value: columns },
       levelsBack: { value: levelsBack },
       arity: { value: arity },
-      seed: { value: calculatedSeed },
+      seed: { value: seed },
     })
   }
 
@@ -121,20 +146,16 @@ class Expression {
    * @type {number[]}
    */
   get chromosome() {
+    this._throwIfDestroyed()
+
     const {
-      exports: {
-        stackSave,
-        stackAlloc,
-        stackRestore,
-        _delete_uint32_array,
-        _expression_get_chromosome,
-      },
+      exports: { _delete_uint32_array, _expression_get_chromosome },
       memory: { U32 },
     } = getInstance()
 
-    const stackStart = stackSave()
+    const stackStart = this._stackSave()
 
-    const lengthPointer = stackAlloc(Uint32Array.BYTES_PER_ELEMENT)
+    const lengthPointer = this._stackAlloc(Uint32Array.BYTES_PER_ELEMENT)
 
     const arrayPointer = _expression_get_chromosome(this.pointer, lengthPointer)
 
@@ -147,30 +168,28 @@ class Expression {
     const chromosome = Array.from(typedChromosome)
 
     _delete_uint32_array(arrayPointer)
-    stackRestore(stackStart)
+    this._stackRestore(stackStart)
 
     return chromosome
   }
 
   set chromosome(chromosome) {
-    if (!Array.isArray(chromosome)) {
-      throw 'The chromosome is not an array'
-    }
+    this._throwIfDestroyed()
 
-    if (!chromosome.every(i => typeof i === 'number')) {
-      throw 'Every entry of the chromosome must be a number'
+    if (!isArray(chromosome) || !chromosome.every(isNumber)) {
+      throw new TypeError('Provided chromosome must be an array of numbers.')
     }
 
     if (!chromosome.every(i => i >= 0)) {
-      throw 'Every entry of the chromosome must not be negative'
+      throw new TypeError('Every entry of the chromosome must not be negative.')
     }
 
     const {
-      exports: { stackSave, stackRestore, _expression_set_chromosome },
+      exports: { _expression_set_chromosome },
       memory: { U32 },
     } = getInstance()
 
-    const stackStart = stackSave()
+    const stackStart = this._stackSave()
 
     const chromosomePointer = stackPutArray(chromosome, U32)
 
@@ -180,7 +199,7 @@ class Expression {
       chromosome.length
     )
 
-    stackRestore(stackStart)
+    this._stackRestore(stackStart)
   }
 
   /**
@@ -197,34 +216,41 @@ class Expression {
    * // could for example return [[2, 4], [5, 8]]
    */
   evaluate(...inputs) {
+    this._throwIfDestroyed()
+
     if (inputs.length !== this.inputs) {
-      throw 'Number of inputs needs to match' +
-        `the number of inputs of the expression which is ${this.inputs}`
+      throw new Error(
+        'Number of inputs must match the number of inputs ' +
+          `of the expression which is ${this.inputs}`
+      )
     }
 
-    if (!inputs.every(i => typeof i === 'number' || Array.isArray(i))) {
-      throw 'Every entry of inputs must be a number or an array with numbers'
+    if (!containsOneType(inputs) || !containsNumbersOnly(inputs)) {
+      throw new TypeError(
+        'Provided inputs must be of the same type, ' +
+          'Array.<Number> or Number but not mixed.'
+      )
     }
 
     const {
-      exports: { stackSave, stackRestore, _expression_evaluate },
+      exports: { _expression_evaluate },
       memory: { F64 },
     } = getInstance()
 
-    const stackStart = stackSave()
+    const stackStart = this._stackSave()
 
     const inputArray = structureEvaluationInputs(inputs)
 
     const inputPointer = stackPutArray(inputArray, F64)
 
-    const results = calculateEvaluation({
-      outputs: this.outputs,
+    const results = calculateEvaluation(
       inputs,
       inputPointer,
-      evaluate: _expression_evaluate.bind(null, this.pointer),
-    })
+      _expression_evaluate.bind(null, this.pointer),
+      this.outputs
+    )
 
-    stackRestore(stackStart)
+    this._stackRestore(stackStart)
 
     return results
   }
@@ -240,34 +266,34 @@ class Expression {
    * // could for example return ['(a+b)']
    */
   equations(...inputSymbols) {
+    this._throwIfDestroyed()
+
     if (inputSymbols.length !== this.inputs) {
-      throw 'Number of inputSymbols needs to match ' +
-        `the number of inputs of the expression which is ${this.inputs}`
+      throw new Error(
+        'Number of inputSymbols needs to match ' +
+          `the number of inputs of the expression which is ${this.inputs}.`
+      )
     }
 
-    if (!inputSymbols.every(i => typeof i === 'string')) {
-      throw 'Every entry of inputSymbols must be a string'
+    if (!inputSymbols.every(isString)) {
+      throw new TypeError('Every inputSymbol must be a string.')
     }
+
     const {
-      exports: {
-        stackSave,
-        stackRestore,
-        _delete_string,
-        _expression_equation,
-      },
+      exports: { _delete_string, _expression_equation },
       memory: { U8 },
     } = getInstance()
 
-    const stackStart = stackSave()
+    const stackStart = this._stackSave()
 
-    const encodedStrings = encodeStringArray(inputSymbols)
+    const encodedStrings = encodeStrings(...inputSymbols)
     const stringsPointer = stackPutArray(encodedStrings, U8)
 
     const resultPointer = _expression_equation(this.pointer, stringsPointer)
-    const results = decodeStringArray(U8, resultPointer, this.outputs)
+    const results = decodeStrings(resultPointer, this.outputs)
 
     _delete_string(resultPointer)
-    stackRestore(stackStart)
+    this._stackRestore(stackStart)
 
     return results
   }
@@ -283,21 +309,28 @@ class Expression {
    * @returns {number} The loss.
    */
   loss(inputs, labels, constants = []) {
+    this._throwIfDestroyed()
+
     if (inputs.length + constants.length !== this.inputs) {
-      throw 'The number of provided inputs is not equal to the required inputs for this expression.'
+      throw new Error(
+        'The number of provided inputs is not equal to the required inputs for this expression. ' +
+          'The inputs and the constants together must match the number inputs of the expression.'
+      )
     }
 
     if (inputs[0].length !== labels[0].length) {
-      throw 'input and output must be an array of the same length. ' +
-        `Lengths ${inputs.length} and ${labels.length} found.`
+      throw new Error(
+        'input and output must be an array of the same length. ' +
+          `Lengths ${inputs.length} and ${labels.length} found.`
+      )
     }
 
     const {
       memory: { F64 },
-      exports: { stackSave, stackRestore, _expression_loss },
+      exports: { _expression_loss },
     } = getInstance()
 
-    const stackStart = stackSave()
+    const stackStart = this._stackSave()
 
     const [inputsPointer, labelsPointer] = [inputs, labels].map(data => {
       const flat = flatten2D(data)
@@ -317,7 +350,7 @@ class Expression {
       constants.length
     )
 
-    stackRestore(stackStart)
+    this._stackRestore(stackStart)
     return loss
   }
   // // Gets the idx of the active genes in the current chromosome(numbering is from 0)
@@ -378,6 +411,8 @@ class Expression {
     } = getInstance()
 
     _expression_destroy(this.pointer)
+
+    super.destroy()
   }
 }
 
