@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+#include <cmath>
 #include <dcgp/expression.hpp>
 #include <dcgp/kernel.hpp>
 #include <dcgp/kernel_set.hpp>
@@ -90,3 +91,9 @@ void fill_vector_grid(
       yt_dest[i][j] = T(yt_src[j * xy_length + i]);
   }
 }
+
+double magnitude(const std::vector<double> &in);
+
+void scale(std::vector<double> &in, const double &scalar);
+
+void normalize(std::vector<double> &in);

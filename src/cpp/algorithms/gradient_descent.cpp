@@ -1,6 +1,7 @@
 #include <emscripten.h>
 #include <vector>
 #include <cmath>
+#include <limits>
 #include <functional>
 #include <algorithm>
 #include <iterator>
@@ -62,47 +63,54 @@ double gradient_descent(
 {
   gdual_v loss_expression;
   double loss = calc_loss(self, inputs, labels, loss_expression);
-  double learning_rate(0.05);
-  const unsigned constants_offset = inputs.size() - num_constants;
-  vector<double> dC(num_constants);
+  const unsigned const_offset = inputs.size() - num_constants;
+  vector<gdual_v> start_constants(num_constants);
+  vector<double> normalized_gradients(num_constants);
 
-  if (!std::isfinite(loss)) return loss;
+  if (!std::isfinite(loss))
+    return loss;
 
-  for(size_t s = 0; s < max_steps; s++)
+  for (size_t s = 0; s < max_steps; s++)
   {
-    learning_rate *= 2.0;
+    double learning_rate = 1.0;
 
     for (size_t i = 0; i < num_constants; i++)
     {
-      dC[i] = calc_derivative(loss_expression, i);
+      start_constants[i] = inputs[const_offset + i];
+      normalized_gradients[i] = calc_derivative(loss_expression, i);
 
-      if (!std::isfinite(dC[i]))
+      if (!std::isfinite(normalized_gradients[i]))
         return loss;
-
-      inputs[constants_offset + i] -= dC[i] * learning_rate;
     }
 
-    double new_loss = calc_loss(self, inputs, labels, loss_expression);
+    normalize(normalized_gradients);
 
+    for (size_t i = 0; i < num_constants; i++)
+      inputs[const_offset + i] -= normalized_gradients[i] * learning_rate;
+
+    double new_loss = calc_loss(self, inputs, labels, loss_expression);
     bool new_loss_is_better = new_loss < loss;
-    bool lr_is_valid = learning_rate > 1e-10;
+    bool lr_is_valid = learning_rate > std::numeric_limits<double>::epsilon();
     bool is_finite_loss = std::isfinite(new_loss);
     while (lr_is_valid && (!is_finite_loss || !new_loss_is_better))
     {
       learning_rate /= 2.0;
 
       for (size_t i = 0; i < num_constants; i++)
-      {
-        // Add the gradient times the updated learning rate because
-        // that is the same as removing the already added gradient
-        // step and adding the updated fraction.
-        inputs[constants_offset + i] += dC[i] * learning_rate;
-      }
+        inputs[const_offset + i] = start_constants[i] - normalized_gradients[i] * learning_rate;
 
       new_loss = calc_loss(self, inputs, labels, loss_expression);
       new_loss_is_better = new_loss < loss;
-      lr_is_valid = learning_rate > 1e-10;
+      lr_is_valid = learning_rate > std::numeric_limits<double>::epsilon();
       is_finite_loss = std::isfinite(new_loss);
+    }
+
+    if (!lr_is_valid)
+    {
+      for (size_t i = 0; i < num_constants; i++)
+        inputs[const_offset + i] = start_constants[i];
+
+      return loss;
     }
 
     loss = new_loss;

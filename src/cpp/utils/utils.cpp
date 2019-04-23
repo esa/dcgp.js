@@ -20,6 +20,34 @@ void fill_strings_vector(
   }
 }
 
+double magnitude(const std::vector<double> &in)
+{
+  double retval(0.0);
+
+  for (size_t i = 0; i < in.size(); i++)
+  {
+    retval += std::pow(in[i], 2);
+  }
+
+  return std::sqrt(retval);
+}
+
+void scale(std::vector<double> &in, const double &scalar)
+{
+  for (size_t i = 0; i < in.size(); i++)
+  {
+    in[i] *= scalar;
+  }
+}
+
+void normalize(std::vector<double> &in)
+{
+  double scalar = magnitude(in);
+
+  if (scalar > 0) {
+    scale(in, 1 / scalar);
+  }
+}
 
 extern "C"
 {
