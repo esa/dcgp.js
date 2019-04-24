@@ -1,5 +1,6 @@
 #include <emscripten.h>
 #include <vector>
+#include <cmath>
 #include <functional>
 #include <algorithm>
 #include <iterator>
@@ -19,13 +20,16 @@ struct Member
 
   static bool compare(const Member m1, const Member m2)
   {
+    if(std::isfinite(m1.loss) && !std::isfinite(m2.loss)) {
+      return true;
+    }
+
     return (m1.loss < m2.loss);
   }
 };
 
-template <typename T>
 double mu_plus_lambda(
-    expression<T> *const self,
+    expression<double> *const self,
     const unsigned &mu,
     const unsigned &lambda,
     const unsigned &max_steps,
@@ -89,14 +93,17 @@ extern "C"
     vector<vector<double>> yt(xy_length, vector<double>(num_outputs));
 
     fill_vector_grid<double>(
-        x, yt,
-        x_array, yt_array, xy_length,
-        num_inputs, num_outputs,
+        x, x_array,
+        xy_length, num_inputs,
         constants, constants_length);
+
+    fill_vector_grid<double>(
+        yt, yt_array,
+        xy_length, num_outputs);
 
     function<double(void)> get_loss = [&self, &x, &yt]() -> double { return self->loss(x, yt, "MSE"); };
 
-    double lowest_loss = mu_plus_lambda<double>(self, mu, lambda, max_steps, get_loss);
+    double lowest_loss = mu_plus_lambda(self, mu, lambda, max_steps, get_loss);
 
     return lowest_loss;
   };
