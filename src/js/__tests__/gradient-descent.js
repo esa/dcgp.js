@@ -316,7 +316,7 @@ describe('gradient descent', () => {
     expect(result.constants.every(c => isFinite(c))).toBeTruthy()
 
     expect(lossBefore >= result.loss).toBeTruthy()
-    expect(result.loss < 1400).toBeTruthy()
+    expect(result.loss).toMatchInlineSnapshot(`1391.3107856743718`)
   })
 
   describe('edge case equation 2', () => {
@@ -411,7 +411,7 @@ describe('gradient descent', () => {
       expect(result.constants.every(c => isFinite(c))).toBeTruthy()
 
       expect(lossBefore >= result.loss).toBeTruthy()
-      expect(result.loss < 15).toBeTruthy()
+      expect(result.loss).toMatchInlineSnapshot(`10.590526057554111`)
     })
 
     it('improves the constants from [0.5, 2, 3, 4]', () => {
@@ -445,7 +445,7 @@ describe('gradient descent', () => {
       expect(result.constants.every(c => isFinite(c))).toBeTruthy()
 
       expect(lossBefore >= result.loss).toBeTruthy()
-      expect(result.loss < 15).toBeTruthy()
+      expect(result.loss).toMatchInlineSnapshot(`10.287509039934495`)
     })
   })
 })
