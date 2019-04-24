@@ -411,7 +411,7 @@ describe('gradient descent', () => {
       expect(result.constants.every(c => isFinite(c))).toBeTruthy()
 
       expect(lossBefore >= result.loss).toBeTruthy()
-      expect(result.loss.toFixed(4)).toMatchInlineSnapshot(`"10.5905"`)
+      expect(result.loss.toFixed(4)).toMatchInlineSnapshot(`"13.1164"`)
     })
 
     it('improves the constants from [0.5, 2, 3, 4]', () => {

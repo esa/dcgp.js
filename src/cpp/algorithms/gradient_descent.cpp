@@ -67,12 +67,14 @@ double gradient_descent(
   vector<gdual_v> start_constants(num_constants);
   vector<double> normalized_gradients(num_constants);
 
+  double learning_rate = 0.5;
+
   if (!std::isfinite(loss))
     return loss;
 
   for (size_t s = 0; s < max_steps; s++)
   {
-    double learning_rate = 1.0;
+    learning_rate *= 2.0;
 
     for (size_t i = 0; i < num_constants; i++)
     {
