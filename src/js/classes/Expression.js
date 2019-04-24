@@ -209,10 +209,10 @@ class Expression extends Base {
    * @param {...(number|number[])} inputs Input to the expression.
    * @returns {number[]} The outputs of the expression.
    * @example
-   * expression.evalutate(1, 2, 3)
+   * expression.evaluate(1, 2, 3)
    * // could for example return [2, 5]
    * @example
-   * kernel.evalutate([1, 4], [2, 5], [3, 6])
+   * kernel.evaluate([1, 4], [2, 5], [3, 6])
    * // could for example return [[2, 4], [5, 8]]
    */
   evaluate(...inputs) {

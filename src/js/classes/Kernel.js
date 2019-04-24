@@ -84,10 +84,10 @@ class Kernel extends Base {
    * @param {...(number|number[])} inputs Input to the kernel. Must be at least two.
    * @returns {(number|number[])} The output of the kernel.
    * @example
-   * kernel.evalutate(1, 2, 3)
+   * kernel.evaluate(1, 2, 3)
    * // could for example return 2
    * @example
-   * kernel.evalutate([1, 4], [2, 5], [3, 6])
+   * kernel.evaluate([1, 4], [2, 5], [3, 6])
    * // could for example return [3, 2]
    */
   evaluate(...inputs) {

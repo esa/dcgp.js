@@ -2,7 +2,7 @@ import { getInstance } from '../initialiser'
 
 class Base {
   constructor() {
-    this.destroyed = false
+    this.isDestroyed = false
   }
 
   _stackSave(...args) {
@@ -30,12 +30,12 @@ class Base {
   }
 
   destroy() {
-    this.destroyed = true
+    this.isDestroyed = true
   }
 
   _throwIfDestroyed() {
-    if (this.destroyed) {
-      throw new Error('Kernel has been destroyed.')
+    if (this.isDestroyed) {
+      throw new Error(`${this.constructor.name} has been destroyed.`)
     }
   }
 }
