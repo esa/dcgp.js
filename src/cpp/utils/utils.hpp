@@ -64,31 +64,25 @@ expression<C> *convert_expression_type(
 
 template <typename T>
 void fill_vector_grid(
-    std::vector<std::vector<T>> &x_dest,
-    std::vector<std::vector<T>> &yt_dest,
-    const double *const &x_src,
-    const double *const &yt_src,
-    const unsigned &xy_length,
-    const unsigned &num_inputs,
-    const unsigned &num_outputs,
-    const double *const &constants,
-    const unsigned &constants_length)
+    std::vector<std::vector<T>> &dest,
+    const double *const &src,
+    const unsigned &num_points,
+    const unsigned &num_entries,
+    const double *const &constants = nullptr,
+    const unsigned &constants_length = 0)
 {
-  const unsigned inputs_length = num_inputs - constants_length;
+  const unsigned const_offset = num_entries - constants_length;
 
-  for (size_t i = 0; i < xy_length; i++)
+  for (size_t i = 0; i < num_points; i++)
   {
-    for (size_t j = 0; j < num_inputs; j++)
+    for (size_t j = 0; j < num_entries; j++)
     {
-      if (j >= inputs_length)
-        x_dest[i][j] = T(constants[j - inputs_length]);
+      if (j >= const_offset)
+        dest[i][j] = T(constants[j - const_offset]);
 
       else
-        x_dest[i][j] = T(x_src[j * xy_length + i]);
+        dest[i][j] = T(src[j * num_points + i]);
     }
-
-    for (size_t j = 0; j < num_outputs; j++)
-      yt_dest[i][j] = T(yt_src[j * xy_length + i]);
   }
 }
 

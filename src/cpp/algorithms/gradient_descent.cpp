@@ -35,14 +35,14 @@ double calc_derivative(const gdual_v &loss, const unsigned &index)
 }
 
 double calc_loss(
-    expression<gdual_v> *const &self,
+    const expression<gdual_v> *const &self,
     const vector<gdual_v> &inputs,
     const vector<gdual_v> &labels,
     gdual_v &loss_expression)
 {
-  loss_expression = self->loss(inputs, labels, expression<gdual_v>::loss_type::MSE);
+  double loss(0.0);
 
-  double loss;
+  loss_expression = self->loss(inputs, labels, expression<gdual_v>::loss_type::MSE);
 
   audi::vectorized<double> loss_vect = loss_expression.constant_cf();
 
@@ -125,7 +125,7 @@ double gradient_descent(
 extern "C"
 {
   double EMSCRIPTEN_KEEPALIVE algorithm_gradient_descent(
-      expression<double> *const self,
+      const expression<double> *const self,
       const unsigned max_steps,
       const double *const x_array,
       const double *const yt_array,

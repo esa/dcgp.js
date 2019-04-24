@@ -24,10 +24,13 @@ extern "C"
     vector<vector<double>> yt(xy_length, vector<double>(num_outputs));
 
     fill_vector_grid<double>(
-        x, yt,
-        x_array, yt_array, xy_length,
-        num_inputs, num_outputs,
+        x, x_array,
+        xy_length, num_inputs,
         constants, constants_length);
+
+    fill_vector_grid<double>(
+        yt, yt_array,
+        xy_length, num_outputs);
 
     double loss = self->loss(x, yt, "MSE");
 
