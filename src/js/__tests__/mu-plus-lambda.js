@@ -49,7 +49,6 @@ describe('mu plus lambda', () => {
     )
 
     expect(isFinite(result.loss)).toBeTruthy()
-    expect(result.loss.toFixed(4)).toMatchInlineSnapshot(`"167.6194"`)
   })
 
   it('recovers from Infinity', () => {
@@ -69,6 +68,5 @@ describe('mu plus lambda', () => {
     const result = muPlusLambda(myExpression, 1, 4, 100, inputs, outputs)
 
     expect(isFinite(result.loss)).toBeTruthy()
-    expect(result.loss.toFixed(4)).toMatchInlineSnapshot(`"300489.9004"`)
   })
 })
