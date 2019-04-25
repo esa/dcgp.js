@@ -21,7 +21,7 @@ describe('KernelSet', () => {
   })
 
   it('saves the kernels provided at construction', () => {
-    const kernelIds = ['sum', 'diff', 'mul']
+    const kernelIds = ['sum', 'diff', 'gaussian']
     const myKernelSet = new KernelSet(...kernelIds)
 
     myKernelSet.names.forEach((name, i) => {
@@ -32,7 +32,7 @@ describe('KernelSet', () => {
   })
 
   it('saves the kernels provided with the push method', () => {
-    const kernelIds = ['sum', 'diff', 'mul']
+    const kernelIds = ['sum', 'diff', 'sqrt']
     const myKernelSet = new KernelSet()
 
     kernelIds.forEach(kernelId => myKernelSet.push(kernelId))
@@ -45,7 +45,7 @@ describe('KernelSet', () => {
   })
 
   it('saves the kernels provided with the push method and construction', () => {
-    const kernelIds = ['sum', 'diff', 'mul']
+    const kernelIds = ['sum', 'div', 'mul']
     const myKernelSet = new KernelSet(...kernelIds)
     myKernelSet.push('sin')
 

@@ -1,8 +1,10 @@
 import { getInstance } from '../initialiser'
 
 class Base {
-  constructor() {
-    this.isDestroyed = false
+  _isDestroyed = false
+
+  get isDestroyed() {
+    return this._isDestroyed
   }
 
   _stackSave(...args) {
@@ -30,11 +32,11 @@ class Base {
   }
 
   destroy() {
-    this.isDestroyed = true
+    this._isDestroyed = true
   }
 
   _throwIfDestroyed() {
-    if (this.isDestroyed) {
+    if (this._isDestroyed) {
       throw new Error(`${this.constructor.name} has been destroyed.`)
     }
   }

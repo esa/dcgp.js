@@ -13,6 +13,8 @@ const kernelNameOptions = {
   COS: 'cos',
   LOG: 'log',
   EXP: 'exp',
+  GAUSSIAN: 'gaussian',
+  SQRT: 'sqrt',
 }
 
 /**
@@ -29,6 +31,8 @@ class KernelSet extends Base {
   static COS = kernelNameOptions.COS
   static LOG = kernelNameOptions.LOG
   static EXP = kernelNameOptions.EXP
+  static GAUSSIAN = kernelNameOptions.GAUSSIAN
+  static SQRT = kernelNameOptions.SQRT
 
   static ALL_KERNELS = Object.values(kernelNameOptions)
 
