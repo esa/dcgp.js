@@ -152,7 +152,6 @@ jobs:
               -u ${CIRCLE_PROJECT_USERNAME}
               -r ${CIRCLE_PROJECT_REPONAME}
               -c ${CIRCLE_SHA1}
-              -delete
               ${VERSION} "./lib/dcgp.wasm")
 
             if [[ $VERSION == *"-"* ]]; then
