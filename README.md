@@ -33,7 +33,7 @@ myExpression.destroy()
 ```
 
 # Development
-Anyone is welcome to help progress and improve this library. Tasks can be found in the [dcgp.js project](https://github.com/mikeheddes/dcgp.js/projects/1). If your problem/task is not in the tasks, feel free to create a new issue explaining your problem/task.
+Anyone is welcome to help progress and improve this library. Tasks and issues can be found in the [issues tab](https://github.com/esa/dcgp.js/issues). If your problem/task is not in the tasks, feel free to create a new issue explaining your problem/task.
 
 ## Prerequisite
 - docker
