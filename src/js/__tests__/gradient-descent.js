@@ -1,5 +1,3 @@
-const fs = require('fs')
-const path = require('path')
 import { initialise, getInstance } from '../initialiser'
 import gradientDescent from '../algorithms/gradient-descent'
 import KernelSet from '../classes/KernelSet'
@@ -9,8 +7,7 @@ describe('gradient descent', () => {
   let stackStart
 
   beforeAll(async () => {
-    const dcgpBuffer = fs.readFileSync(path.resolve('dcgp.wasm')).buffer
-    await initialise(dcgpBuffer)
+    await initialise()
     const { stackSave } = getInstance().exports
 
     stackStart = stackSave()

@@ -1,5 +1,3 @@
-const fs = require('fs')
-const path = require('path')
 import { initialise, getInstance } from '../initialiser'
 import {
   encodeStrings,
@@ -19,8 +17,7 @@ describe('helpers', () => {
   let stackStart
 
   beforeAll(async () => {
-    const dcgpBuffer = fs.readFileSync(path.resolve('dcgp.wasm')).buffer
-    await initialise(dcgpBuffer)
+    await initialise()
     const { stackSave } = getInstance().exports
 
     stackStart = stackSave()
@@ -62,7 +59,8 @@ describe('helpers', () => {
       const strings = ['test', '1', 'two']
       const encodedStrings = encodeStrings(...strings)
 
-      expect(encodedStrings).toBeInstanceOf(Uint8Array)
+      // toBeInstance of work around: https://github.com/facebook/jest/issues/7780
+      expect(encodedStrings.constructor.name).toBe('Uint8Array')
     })
   })
 
@@ -72,7 +70,8 @@ describe('helpers', () => {
       const strings = ['test', '1', 'two']
       const encodedStrings = encodeStrings(...strings)
 
-      expect(encodedStrings).toBeInstanceOf(Uint8Array)
+      // toBeInstance of work around: https://github.com/facebook/jest/issues/7780
+      expect(encodedStrings.constructor.name).toBe('Uint8Array')
 
       const { U8 } = getInstance().memory
       const pointer = stackPutArray(encodedStrings, U8)
