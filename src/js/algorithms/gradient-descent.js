@@ -29,7 +29,7 @@ function gradientDescent(expression, maxSteps, inputs, labels, constants = []) {
 
   const {
     memory: { F64 },
-    exports: { stackSave, stackRestore, _algorithm_gradient_descent },
+    exports: { stackSave, stackRestore, algorithm_gradient_descent },
   } = getInstance()
 
   const stackStart = stackSave()
@@ -43,7 +43,7 @@ function gradientDescent(expression, maxSteps, inputs, labels, constants = []) {
   const constantsPointer =
     constants.length !== 0 ? stackPutArray(constants, F64) : 0
 
-  const loss = _algorithm_gradient_descent(
+  const loss = algorithm_gradient_descent(
     expression.pointer,
     maxSteps,
     inputsPointer,
