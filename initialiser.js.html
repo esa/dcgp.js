@@ -26,7 +26,7 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import dcgpInitializer, { instantiateModule } from '../../dcgp'
+            <pre class="prettyprint source linenums"><code>import DcgpModule from '../../dcgp'
 
 /**
  * @private
@@ -84,79 +84,88 @@ export const getInstance = () => {
   throw new Error('dcgp is not initialised. initialise must be called first.')
 }
 
-function getTypedMemory(memory) {
-  const { buffer } = memory
-
+function getTypedMemory(dcgpModule) {
   return {
-    S8: new Int8Array(buffer),
-    S16: new Int16Array(buffer),
-    S32: new Int32Array(buffer),
-    U8: new Uint8Array(buffer),
-    U16: new Uint16Array(buffer),
-    U32: new Uint32Array(buffer),
-    F32: new Float32Array(buffer),
-    F64: new Float64Array(buffer),
+    S8: dcgpModule.HEAP8,
+    S16: dcgpModule.HEAP16,
+    S32: dcgpModule.HEAP32,
+    U8: dcgpModule.HEAPU8,
+    U16: dcgpModule.HEAPU16,
+    U32: dcgpModule.HEAPU32,
+    F32: dcgpModule.HEAPF32,
+    F64: dcgpModule.HEAPF64,
   }
 }
 
-function getFetchAndArrayBuffer(fetchOrArrayBuffer) {
-  let fetchInstance, arrayBufferInstance
+function getExports(dcgpModule) {
+  const bindingKeys = Object.keys(dcgpModule)
+    // emscripten prefixes exports with an underscore
+    .filter(key => key.startsWith('_'))
+    // remove the underscore
+    .map(key => key.substr(1, key.length))
+    // remove keys with more than one underscore
+    .filter(key => !key.startsWith('_'))
 
-  // check if user provides an ArrayBuffer of the dcgp.wasm file
-  if (fetchOrArrayBuffer instanceof ArrayBuffer) {
-    arrayBufferInstance = fetchOrArrayBuffer
-
-    // check if the user provides a Promise
-    // which is asumed to come from a fetch request
-    // and will resolve with the dcgp.wasm response
-  } else if (fetchOrArrayBuffer instanceof Promise) {
-    fetchInstance = fetchOrArrayBuffer
-  } else {
-    throw new TypeError(
-      'dcgp must be initialised with an ArrayBuffer, a fetch request ' +
-        'or an WebAssembly.Module of the dcgp.wasm file.'
-    )
+  const exports = {
+    stackSave: dcgpModule.stackSave,
+    stackAlloc: dcgpModule.stackAlloc,
+    stackRestore: dcgpModule.stackRestore,
   }
 
-  return {
-    fetchInstance,
-    arrayBufferInstance,
-  }
+  bindingKeys.forEach(key => {
+    exports[key] = dcgpModule[`_${key}`]
+  })
+
+  return exports
 }
 
-async function getModuleAndInstance(wasmInput) {
-  if (wasmInput instanceof WebAssembly.Module) {
-    return instantiateModule(wasmInput)
-  } else {
-    const { fetchInstance, arrayBufferInstance } = getFetchAndArrayBuffer(
-      wasmInput
-    )
+function internalInitialise(moduleObject) {
+  return new Promise(resolve => {
+    DcgpModule(moduleObject).then(dcgpModule => {
+      // prevent an infinite loop: https://github.com/emscripten-core/emscripten/issues/5820
+      delete dcgpModule.then
+      resolve(dcgpModule)
+    })
+  })
+}
 
-    return await dcgpInitializer(fetchInstance, arrayBufferInstance)
-  }
+/**
+ * @returns {boolean} if the dcgp dcgpModule is initialised
+ */
+export function isInitialised() {
+  return !!privateGlobalInstance
 }
 
 /**
  * Initialises the WebAssembly backend.
  * Needs to be called and fininished before any other methodes or classes can be used.
+ * If no fileLocation is provided it assumes that the dcgp.wasm file is in the same directory as the dcgp.(umd|es).js file
  *
  * @async
- * @param {(Fetch|ArrayBuffer|WebAssembly.Module)} wasmInput
- * @returns {Promise&lt;WebAssembly.Module>}
+ * @param {string} fileLocation either the wasm
  */
-export async function initialise(wasmInput) {
-  if (privateGlobalInstance) {
-    throw new Error('dcgp is already initialised.')
+export async function initialise(fileLocation) {
+  if (isInitialised()) {
+    return
   }
 
-  const { module, instance } = await getModuleAndInstance(wasmInput)
+  const locateFile = fileLocation
+    ? (path, prefix) => {
+        if (path.endsWith('.wasm')) {
+          return fileLocation
+        }
 
-  const typedMemory = getTypedMemory(instance.memory)
-  Object.assign(instance.memory, typedMemory)
+        // keep default behaviour for non wasm files
+        return prefix + path
+      }
+    : undefined
 
-  privateGlobalInstance = instance
+  const dcgpModule = await internalInitialise({ locateFile })
 
-  return module
+  const memory = getTypedMemory(dcgpModule)
+  const exports = getExports(dcgpModule)
+
+  privateGlobalInstance = { memory, exports }
 }
 </code></pre>
         </article>
@@ -168,13 +177,13 @@ export async function initialise(wasmInput) {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Expression.html">Expression</a></li><li><a href="Kernel.html">Kernel</a></li><li><a href="KernelSet.html">KernelSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Algorithm.html">Algorithm</a></li></ul><h3>Global</h3><ul><li><a href="global.html#initialise">initialise</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Expression.html">Expression</a></li><li><a href="Kernel.html">Kernel</a></li><li><a href="KernelSet.html">KernelSet</a></li></ul><h3>Namespaces</h3><ul><li><a href="Algorithm.html">Algorithm</a></li></ul><h3>Global</h3><ul><li><a href="global.html#initialise">initialise</a></li><li><a href="global.html#isInitialised">isInitialised</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon May 06 2019 08:11:46 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri May 10 2019 14:41:00 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
