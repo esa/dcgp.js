@@ -111,6 +111,7 @@ export function isInitialised() {
 /**
  * Initialises the WebAssembly backend.
  * Needs to be called and fininished before any other methodes or classes can be used.
+ * If no fileLocation is provided it assumes that the dcgp.wasm file is in the same directory as the dcgp.(umd|es).js file
  *
  * @async
  * @param {string} fileLocation either the wasm

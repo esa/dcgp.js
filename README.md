@@ -17,7 +17,7 @@ npm install dcgp
 ```js
 import { initialise, KernelSet, Expression, algorithms } from 'dcgp'
 
-await initialise(fetch('/dcgp.wasm') /* or ArrayBuffer or WebAssembly.Module */);
+await initialise(/* specify custom path to dcgp.wasm */);
 const myKernelSet = new KernelSet('sum', 'diff', 'mul', 'div');
 const myExpression = new Expression(2, 1, 2, 6, 5, 2, myKernelSet, 5);
 
