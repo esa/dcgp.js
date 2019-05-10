@@ -43,11 +43,11 @@ class KernelSet extends Base {
     super()
 
     const {
-      exports: { _kernel_set_constructor_0, _kernel_set_constructor_1 },
+      exports: { kernel_set_constructor_0, kernel_set_constructor_1 },
       memory: { U8 },
     } = getInstance()
 
-    if (kernelNames) {
+    if (kernelNames.length > 0) {
       const options = Object.values(kernelNameOptions)
 
       kernelNames.forEach(kernelName => {
@@ -63,7 +63,7 @@ class KernelSet extends Base {
       const encodedStrings = encodeStrings(...kernelNames)
       const namesPointer = stackPutArray(encodedStrings, U8)
 
-      const receivedPointer = _kernel_set_constructor_1(
+      const receivedPointer = kernel_set_constructor_1(
         namesPointer,
         kernelNames.length
       )
@@ -74,7 +74,7 @@ class KernelSet extends Base {
       return
     }
 
-    const receivedPointer = _kernel_set_constructor_0()
+    const receivedPointer = kernel_set_constructor_0()
     Object.defineProperty(this, 'pointer', { value: receivedPointer })
   }
 
@@ -88,12 +88,12 @@ class KernelSet extends Base {
     this._throwIfDestroyed()
 
     const {
-      exports: { _kernel_set_push_back_0, _kernel_set_push_back_1 },
+      exports: { kernel_set_push_back_0, kernel_set_push_back_1 },
       memory: { U8 },
     } = getInstance()
 
     if (kernel instanceof Kernel) {
-      _kernel_set_push_back_1(this.pointer, kernel.pointer)
+      kernel_set_push_back_1(this.pointer, kernel.pointer)
       return
     }
 
@@ -110,7 +110,7 @@ class KernelSet extends Base {
     const textArray = encodeStrings(kernel)
     const textPointer = stackPutArray(textArray, U8)
 
-    _kernel_set_push_back_0(this.pointer, textPointer)
+    kernel_set_push_back_0(this.pointer, textPointer)
 
     this._stackRestore(stackStart)
   }
@@ -123,13 +123,13 @@ class KernelSet extends Base {
     this._throwIfDestroyed()
 
     const {
-      exports: { _kernel_set_num_kernels, _kernel_set_get_kernels },
+      exports: { kernel_set_num_kernels, kernel_set_get_kernels },
       memory: { U32 },
     } = getInstance()
 
     const stackStart = this._stackSave()
 
-    const numKernels = _kernel_set_num_kernels(this.pointer)
+    const numKernels = kernel_set_num_kernels(this.pointer)
 
     if (numKernels === 0) {
       return []
@@ -139,7 +139,7 @@ class KernelSet extends Base {
       U32.BYTES_PER_ELEMENT * numKernels
     )
 
-    _kernel_set_get_kernels(this.pointer, pointersArrPointer)
+    kernel_set_get_kernels(this.pointer, pointersArrPointer)
 
     const kernelPointers = new Uint32Array(
       U32.buffer,
@@ -169,10 +169,10 @@ class KernelSet extends Base {
     this._throwIfDestroyed()
 
     const {
-      exports: { _kernel_set_get_kernel, _kernel_set_num_kernels },
+      exports: { kernel_set_get_kernel, kernel_set_num_kernels },
     } = getInstance()
 
-    const numKernels = _kernel_set_num_kernels(this.pointer)
+    const numKernels = kernel_set_num_kernels(this.pointer)
     const maxIndex = numKernels - 1
 
     if (index > maxIndex) {
@@ -181,7 +181,7 @@ class KernelSet extends Base {
       )
     }
 
-    const pointer = _kernel_set_get_kernel(this.pointer, index)
+    const pointer = kernel_set_get_kernel(this.pointer, index)
 
     return new Kernel(null, pointer)
   }
@@ -223,10 +223,10 @@ class KernelSet extends Base {
     this._throwIfDestroyed()
 
     const {
-      exports: { _kernel_set_clear },
+      exports: { kernel_set_clear },
     } = getInstance()
 
-    _kernel_set_clear(this.pointer)
+    kernel_set_clear(this.pointer)
   }
 
   /**
@@ -237,10 +237,10 @@ class KernelSet extends Base {
     this._throwIfDestroyed()
 
     const {
-      exports: { _kernel_set_destroy },
+      exports: { kernel_set_destroy },
     } = getInstance()
 
-    _kernel_set_destroy(this.pointer)
+    kernel_set_destroy(this.pointer)
 
     super.destroy()
   }

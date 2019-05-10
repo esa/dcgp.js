@@ -6,7 +6,6 @@ const glob = require('glob')
 
 const DEBUG = process.env.NODE_ENV === 'development'
 
-const cwd = process.cwd()
 const INCLUDE_DIR = join('/usr', 'local', 'include')
 const LIBRARY_DIR = join('/usr', 'local', 'lib')
 const bitFile = 'dcgp.bc'
@@ -39,8 +38,10 @@ const wasmArgs = [
   join(LIBRARY_DIR, 'libboost_wserialization.so'),
   optimalisation,
   '-g4',
-  '--pre-js',
-  join(cwd, 'src', 'js', 'pre.js'),
+  '-s',
+  'EXPORT_ES6=1',
+  '-s',
+  'MODULARIZE=1',
   '-o',
   'dcgp.js',
   DEBUG && '--source-map-base',

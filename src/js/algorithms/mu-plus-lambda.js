@@ -38,7 +38,7 @@ function muPlusLambda(
 
   const {
     memory: { F64 },
-    exports: { stackSave, stackRestore, _algorithm_mu_plus_lambda },
+    exports: { stackSave, stackRestore, algorithm_mu_plus_lambda },
   } = getInstance()
 
   const stackStart = stackSave()
@@ -52,7 +52,7 @@ function muPlusLambda(
   const constantsPointer =
     constants.length !== 0 ? stackPutArray(constants, F64) : 0
 
-  const loss = _algorithm_mu_plus_lambda(
+  const loss = algorithm_mu_plus_lambda(
     expression.pointer,
     mu,
     lambda,

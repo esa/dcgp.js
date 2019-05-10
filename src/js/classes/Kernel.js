@@ -59,18 +59,18 @@ class Kernel extends Base {
 
     if (pointer) {
       const {
-        exports: { _delete_string, _kernel_name },
+        exports: { delete_string, kernel_name },
       } = getInstance()
 
       Object.defineProperty(this, 'pointer', { value: pointer })
 
-      const namePointer = _kernel_name(this.pointer)
+      const namePointer = kernel_name(this.pointer)
 
       const [name] = decodeStrings(namePointer)
 
       Object.defineProperty(this, 'name', { value: name })
 
-      _delete_string(namePointer)
+      delete_string(namePointer)
       return
     }
 
@@ -105,7 +105,7 @@ class Kernel extends Base {
     }
 
     const {
-      exports: { _kernel_evaluate },
+      exports: { kernel_evaluate },
       memory: { F64 },
     } = getInstance()
 
@@ -118,7 +118,7 @@ class Kernel extends Base {
     const result = calculateEvaluation(
       inputs,
       inputPointer,
-      _kernel_evaluate.bind(null, this.pointer)
+      kernel_evaluate.bind(null, this.pointer)
     )
 
     this._stackRestore(stackStart)
@@ -148,7 +148,7 @@ class Kernel extends Base {
     }
 
     const {
-      exports: { _delete_string, _kernel_equation },
+      exports: { delete_string, kernel_equation },
       memory: { U8 },
     } = getInstance()
 
@@ -157,7 +157,7 @@ class Kernel extends Base {
     const encodedStrings = encodeStrings(...inputSymbols)
     const stringsPointer = stackPutArray(encodedStrings, U8)
 
-    const resultPointer = _kernel_equation(
+    const resultPointer = kernel_equation(
       this.pointer,
       stringsPointer,
       inputSymbols.length
@@ -165,7 +165,7 @@ class Kernel extends Base {
 
     const [result] = decodeStrings(resultPointer)
 
-    _delete_string(resultPointer)
+    delete_string(resultPointer)
     this._stackRestore(stackStart)
 
     return result
@@ -187,10 +187,10 @@ class Kernel extends Base {
     this._throwIfDestroyed()
 
     const {
-      exports: { _kernel_destroy },
+      exports: { kernel_destroy },
     } = getInstance()
 
-    _kernel_destroy(this.pointer)
+    kernel_destroy(this.pointer)
 
     super.destroy()
   }

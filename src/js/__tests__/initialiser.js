@@ -1,21 +1,12 @@
-const fs = require('fs')
-const path = require('path')
+const { resolve } = require('path')
 import { initialise } from '../initialiser'
 
 describe('initialiser', () => {
-  let wasmModule
-  let dcgpBuffer
-
-  beforeAll(async () => {
-    dcgpBuffer = fs.readFileSync(path.resolve('dcgp.wasm')).buffer
-    wasmModule = await initialise(dcgpBuffer)
+  it('initialises without errors', async () => {
+    await initialise()
   })
 
-  it('returns WebAssembly.Module', () => {
-    expect(wasmModule).toBeInstanceOf(WebAssembly.Module)
-  })
-
-  it('throws on second call', () => {
-    expect(initialise(dcgpBuffer)).rejects.toThrow()
+  it('initialises with a custom fileLocation without errors', async () => {
+    await initialise(resolve('../../../dcgp.wasm'))
   })
 })

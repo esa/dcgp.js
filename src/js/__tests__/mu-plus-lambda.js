@@ -1,5 +1,3 @@
-const fs = require('fs')
-const path = require('path')
 import { initialise, getInstance } from '../initialiser'
 import muPlusLambda from '../algorithms/mu-plus-lambda'
 import KernelSet from '../classes/KernelSet'
@@ -9,8 +7,7 @@ describe('mu plus lambda', () => {
   let stackStart
 
   beforeAll(async () => {
-    const dcgpBuffer = fs.readFileSync(path.resolve('dcgp.wasm')).buffer
-    await initialise(dcgpBuffer)
+    await initialise()
     const { stackSave } = getInstance().exports
 
     stackStart = stackSave()

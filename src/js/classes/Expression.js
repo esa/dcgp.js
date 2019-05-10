@@ -24,7 +24,7 @@ function structureEvaluationInputs(inputs) {
 
 function calculateEvaluation(inputs, inputPointer, evaluate, outputs) {
   const {
-    exports: { _delete_double_array },
+    exports: { delete_double_array },
     memory: { F64 },
   } = getInstance()
 
@@ -39,7 +39,7 @@ function calculateEvaluation(inputs, inputPointer, evaluate, outputs) {
         const typedResult = new Float64Array(F64.buffer, resultPointer, outputs)
         const result = Array.from(typedResult)
 
-        _delete_double_array(resultPointer)
+        delete_double_array(resultPointer)
         return result
       })
 
@@ -50,7 +50,7 @@ function calculateEvaluation(inputs, inputPointer, evaluate, outputs) {
     const typedResult = new Float64Array(F64.buffer, resultPointer, outputs)
     const results = Array.from(typedResult)
 
-    _delete_double_array(resultPointer)
+    delete_double_array(resultPointer)
     return results
   }
 }
@@ -95,7 +95,7 @@ class Expression extends Base {
     super()
 
     const {
-      exports: { _expression_constructor },
+      exports: { expression_constructor },
     } = getInstance()
 
     const hasValidArguments = [
@@ -118,7 +118,7 @@ class Expression extends Base {
       throw new TypeError('kernelSet must be an instance of KernelSet')
     }
 
-    const pointer = _expression_constructor(
+    const pointer = expression_constructor(
       inputs,
       outputs,
       rows,
@@ -149,7 +149,7 @@ class Expression extends Base {
     this._throwIfDestroyed()
 
     const {
-      exports: { _delete_uint32_array, _expression_get_chromosome },
+      exports: { delete_uint32_array, expression_get_chromosome },
       memory: { U32 },
     } = getInstance()
 
@@ -157,7 +157,7 @@ class Expression extends Base {
 
     const lengthPointer = this._stackAlloc(Uint32Array.BYTES_PER_ELEMENT)
 
-    const arrayPointer = _expression_get_chromosome(this.pointer, lengthPointer)
+    const arrayPointer = expression_get_chromosome(this.pointer, lengthPointer)
 
     const typedChromosome = new Uint32Array(
       U32.buffer,
@@ -167,7 +167,7 @@ class Expression extends Base {
 
     const chromosome = Array.from(typedChromosome)
 
-    _delete_uint32_array(arrayPointer)
+    delete_uint32_array(arrayPointer)
     this._stackRestore(stackStart)
 
     return chromosome
@@ -185,7 +185,7 @@ class Expression extends Base {
     }
 
     const {
-      exports: { _expression_set_chromosome },
+      exports: { expression_set_chromosome },
       memory: { U32 },
     } = getInstance()
 
@@ -193,7 +193,7 @@ class Expression extends Base {
 
     const chromosomePointer = stackPutArray(chromosome, U32)
 
-    _expression_set_chromosome(
+    expression_set_chromosome(
       this.pointer,
       chromosomePointer,
       chromosome.length
@@ -233,7 +233,7 @@ class Expression extends Base {
     }
 
     const {
-      exports: { _expression_evaluate },
+      exports: { expression_evaluate },
       memory: { F64 },
     } = getInstance()
 
@@ -246,7 +246,7 @@ class Expression extends Base {
     const results = calculateEvaluation(
       inputs,
       inputPointer,
-      _expression_evaluate.bind(null, this.pointer),
+      expression_evaluate.bind(null, this.pointer),
       this.outputs
     )
 
@@ -280,7 +280,7 @@ class Expression extends Base {
     }
 
     const {
-      exports: { _delete_string, _expression_equation },
+      exports: { delete_string, expression_equation },
       memory: { U8 },
     } = getInstance()
 
@@ -289,10 +289,10 @@ class Expression extends Base {
     const encodedStrings = encodeStrings(...inputSymbols)
     const stringsPointer = stackPutArray(encodedStrings, U8)
 
-    const resultPointer = _expression_equation(this.pointer, stringsPointer)
+    const resultPointer = expression_equation(this.pointer, stringsPointer)
     const results = decodeStrings(resultPointer, this.outputs)
 
-    _delete_string(resultPointer)
+    delete_string(resultPointer)
     this._stackRestore(stackStart)
 
     return results
@@ -327,7 +327,7 @@ class Expression extends Base {
 
     const {
       memory: { F64 },
-      exports: { _expression_loss },
+      exports: { expression_loss },
     } = getInstance()
 
     const stackStart = this._stackSave()
@@ -341,7 +341,7 @@ class Expression extends Base {
     const constantsPointer =
       constants.length !== 0 ? stackPutArray(constants, F64) : 0
 
-    const loss = _expression_loss(
+    const loss = expression_loss(
       this.pointer,
       inputsPointer,
       labelsPointer,
@@ -407,10 +407,10 @@ class Expression extends Base {
    */
   destroy() {
     const {
-      exports: { _expression_destroy },
+      exports: { expression_destroy },
     } = getInstance()
 
-    _expression_destroy(this.pointer)
+    expression_destroy(this.pointer)
 
     super.destroy()
   }

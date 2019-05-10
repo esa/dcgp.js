@@ -1,5 +1,3 @@
-const fs = require('fs')
-const path = require('path')
 import { initialise, getInstance } from '../initialiser'
 import KernelSet from '../classes/KernelSet'
 
@@ -7,8 +5,7 @@ describe('KernelSet', () => {
   let stackStart
 
   beforeAll(async () => {
-    const dcgpBuffer = fs.readFileSync(path.resolve('dcgp.wasm')).buffer
-    await initialise(dcgpBuffer)
+    await initialise()
     const { stackSave } = getInstance().exports
 
     stackStart = stackSave()
@@ -47,6 +44,11 @@ describe('KernelSet', () => {
   it('saves the kernels provided with the push method and construction', () => {
     const kernelIds = ['sum', 'div', 'mul']
     const myKernelSet = new KernelSet(...kernelIds)
+
+    myKernelSet.names.forEach((name, i) => {
+      expect(name).toBe(kernelIds[i])
+    })
+
     myKernelSet.push('sin')
 
     const returnedNames = [...kernelIds, 'sin']
