@@ -9,9 +9,9 @@
 #include <audi/gdual.hpp>
 #include <audi/vectorized.hpp>
 
+#include "./gradient_descent.hpp"
 #include "../utils/utils.hpp"
-
-using namespace dcgp;
+#include "../expression/expression.hpp"
 
 typedef audi::gdual<audi::vectorized<double>> gdual_v;
 
@@ -127,7 +127,7 @@ double gradient_descent(
 extern "C"
 {
   double EMSCRIPTEN_KEEPALIVE algorithm_gradient_descent(
-      const expression<double> *const self,
+      const custom_expression<double> *const self,
       const unsigned max_steps,
       const double *const x_array,
       const double *const yt_array,
@@ -146,7 +146,7 @@ extern "C"
     yt.reserve(num_outputs);
 
     // fill the x and yt vectors with the transposed provided x_array and yt_array.
-    // use seperate scope to remove unnecessary variable from memory stack during gradient descent.
+    // use separate scope to remove unnecessary variable from memory stack during gradient descent.
     {
       vector<vector<double>> x_double(num_inputs, vector<double>(xy_length));
       vector<vector<double>> yt_double(num_outputs, vector<double>(xy_length));
@@ -174,8 +174,7 @@ extern "C"
         yt.emplace_back(yt_double[i]);
     }
 
-    // the seed argument is not important since we're not doing anything random in this algorithm.
-    expression<gdual_v> *gdual_v_expression = convert_expression_type<double, gdual_v>(self, 1);
+    expression<gdual_v> *gdual_v_expression = convert_expression_type<double, gdual_v>(self);
 
     double lowest_loss = gradient_descent(
         gdual_v_expression,

@@ -2,11 +2,14 @@
 #include <dcgp/expression.hpp>
 #include <dcgp/kernel_set.hpp>
 
+#include "./expression.hpp"
+
 using namespace dcgp;
+
 
 extern "C"
 {
-  expression<double> *EMSCRIPTEN_KEEPALIVE expression_constructor(
+  custom_expression<double> *EMSCRIPTEN_KEEPALIVE expression_constructor(
       const unsigned inputs,
       const unsigned outputs,
       const unsigned rows,
@@ -16,7 +19,7 @@ extern "C"
       const kernel_set<double> *const kernels,
       const double seed)
   {
-    return new expression<double>(
+    return new custom_expression<double>(
         inputs,
         outputs,
         rows,
