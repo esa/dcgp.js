@@ -64,8 +64,19 @@ function hybrid(
     constants.length
   )
 
+  const typedLearnedConstants = new Float64Array(
+    F64.buffer,
+    constantsPointer,
+    constants.length
+  )
+
+  const learnedConstants = Array.from(typedLearnedConstants)
+
   stackRestore(stackStart)
-  return { loss }
+  return {
+    loss,
+    constants: learnedConstants,
+  }
 }
 
 export default hybrid

@@ -8,9 +8,6 @@
 #include <algorithm>
 #include <iterator>
 
-#include "../utils/utils.hpp"
-#include "./mu_plus_lambda.hpp"
-
 using namespace dcgp;
 using std::function;
 using std::vector;

@@ -5,8 +5,6 @@
 #include <audi/gdual.hpp>
 #include <audi/vectorized.hpp>
 
-#include "../utils/utils.hpp"
-
 typedef audi::gdual<audi::vectorized<double>> gdual_v;
 
 double calc_derivative(const gdual_v &, const unsigned &);
