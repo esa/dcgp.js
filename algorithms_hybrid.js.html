@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: algorithms/gradient-descent.js</title>
+    <title>JSDoc: Source: algorithms/hybrid.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: algorithms/gradient-descent.js</h1>
+    <h1 class="page-title">Source: algorithms/hybrid.js</h1>
 
     
 
@@ -34,18 +34,27 @@ import { getInstance } from '../initialiser'
  */
 
 /**
- * @function gradientDescent
+ * @function hybrid
  * @memberof Algorithm
- * @param {Expression} expression Expression to evolve the constants of.
+ * @param {Expression} expression Expression to evolve.
+ * @param {number} mu Number of members of the population to keep alive.
+ * @param {number} lambda Number of new members to generate.
  * @param {number} maxSteps Maximum amount of steps before the algorithm stop.
- * The algorithm could stop before `maxSteps` if a loss of lower than 1e-13 is reached.
- * @param {[[number]]} inputs Matrix with dimentions (inputs, points). The inputs should exclude the constants.
- * @param {[[number]]} labels Matrix with dimentions (outputs, points).
+ * @param {[[number]]} inputs Matrix with dimensions (inputs, points). The inputs should exclude the constants.
+ * @param {[[number]]} labels Matrix with dimensions (outputs, points).
  * @param {number[]} [constants] Array with ephemeral constants to be used as inputs together with `inputs`.
- * The gradient descent algorithm will learn the constants to minimize the Mean Squared Error.
+ * If the type of the expression is a form of 'gdual' these constants will be learned.
  * @returns {object}
  */
-function gradientDescent(expression, maxSteps, inputs, labels, constants = []) {
+function hybrid(
+  expression,
+  mu,
+  lambda,
+  maxSteps,
+  inputs,
+  labels,
+  constants = []
+) {
   if (inputs.length + constants.length !== expression.inputs) {
     throw 'The number of provided inputs is not equal to the required inputs for this expression.'
   }
@@ -57,7 +66,7 @@ function gradientDescent(expression, maxSteps, inputs, labels, constants = []) {
 
   const {
     memory: { F64 },
-    exports: { stackSave, stackRestore, algorithm_gradient_descent },
+    exports: { stackSave, stackRestore, algorithm_hybrid },
   } = getInstance()
 
   const stackStart = stackSave()
@@ -71,8 +80,10 @@ function gradientDescent(expression, maxSteps, inputs, labels, constants = []) {
   const constantsPointer =
     constants.length !== 0 ? stackPutArray(constants, F64) : 0
 
-  const loss = algorithm_gradient_descent(
+  const loss = algorithm_hybrid(
     expression.pointer,
+    mu,
+    lambda,
     maxSteps,
     inputsPointer,
     labelsPointer,
@@ -96,7 +107,7 @@ function gradientDescent(expression, maxSteps, inputs, labels, constants = []) {
   }
 }
 
-export default gradientDescent
+export default hybrid
 </code></pre>
         </article>
     </section>
