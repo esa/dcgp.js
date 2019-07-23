@@ -1,6 +1,9 @@
+#pragma once
+
 #include <vector>
 #include <string>
 #include <cmath>
+#include <random>
 #include <dcgp/expression.hpp>
 #include <dcgp/kernel.hpp>
 #include <dcgp/kernel_set.hpp>
@@ -23,9 +26,7 @@ void fill_strings_vector(
     const unsigned &length);
 
 template <typename T, typename C>
-expression<C> *convert_expression_type(
-    const expression<T> *const current,
-    const unsigned &seed)
+expression<C> *convert_expression_type(const expression<T> *const current)
 {
   const std::vector<kernel<T>> kernels = current->get_f();
 
@@ -40,12 +41,13 @@ expression<C> *convert_expression_type(
     // the gdual types do not support protected division.
     if (kernel_name == "pdiv")
       kernel_names.push_back("div");
-
     else
       kernel_names.push_back(kernel_name);
   }
 
   kernel_set<C> converted_kernel_set(kernel_names);
+
+  std::random_device rd;
 
   expression<C> *converted = new expression<C>(
       current->get_n(),
@@ -55,7 +57,7 @@ expression<C> *convert_expression_type(
       current->get_l(),
       current->get_arity(),
       converted_kernel_set.operator()(),
-      seed);
+      std::uniform_int_distribution<unsigned>()(rd));
 
   converted->set(current->get());
 

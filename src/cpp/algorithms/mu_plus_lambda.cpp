@@ -12,30 +12,28 @@ using namespace dcgp;
 using std::function;
 using std::vector;
 
-// A member of the population
 struct Member
 {
-  vector<unsigned> chromosome;
+  std::vector<unsigned> chromosome;
   double loss;
 
   static bool compare(const Member m1, const Member m2)
   {
-    if(std::isfinite(m1.loss) && !std::isfinite(m2.loss)) {
+    if (std::isfinite(m1.loss) && !std::isfinite(m2.loss))
       return true;
-    }
 
     return (m1.loss < m2.loss);
-  }
+  };
 };
 
-double mu_plus_lambda(
+Member mu_plus_lambda(
     expression<double> *const self,
     const unsigned &mu,
     const unsigned &lambda,
     const unsigned &max_steps,
     function<double(void)> get_loss)
 {
-  vector<Member> population(mu + lambda);
+  vector<Member> population(mu + lambda, Member());
 
   {
     vector<unsigned> initial_chromosome = self->get();
@@ -57,11 +55,10 @@ double mu_plus_lambda(
       self->mutate_active(i + 1);
 
       population[mu + i].chromosome = self->get();
-
       population[mu + i].loss = get_loss();
     }
 
-    // sort population
+    // sort population from best to worst
     std::sort(population.begin(), population.end(), Member::compare);
 
     if (population[0].loss < 1e-14)
@@ -70,7 +67,7 @@ double mu_plus_lambda(
 
   self->set(population[0].chromosome);
 
-  return population[0].loss;
+  return population[0];
 }
 
 extern "C"
@@ -101,10 +98,12 @@ extern "C"
         yt, yt_array,
         xy_length, num_outputs);
 
-    function<double(void)> get_loss = [&self, &x, &yt]() -> double { return self->loss(x, yt, "MSE"); };
+    function<double(void)> get_loss = [&self, &x, &yt]() -> double {
+      return self->loss(x, yt, "MSE");
+    };
 
-    double lowest_loss = mu_plus_lambda(self, mu, lambda, max_steps, get_loss);
+    Member best_member = mu_plus_lambda(self, mu, lambda, max_steps, get_loss);
 
-    return lowest_loss;
+    return best_member.loss;
   };
 }
