@@ -16,7 +16,7 @@ double calc_loss(
     gdual_v &);
 
 double gradient_descent(
-    dcgp::expression<gdual_v> *const,
+    const dcgp::expression<gdual_v> *const,
     const unsigned &,
     std::vector<gdual_v> &,
     const std::vector<gdual_v> &,

@@ -9,9 +9,8 @@
 #include <audi/gdual.hpp>
 #include <audi/vectorized.hpp>
 
-#include "./gradient_descent.hpp"
+#include "gradient_descent.hpp"
 #include "../utils/utils.hpp"
-#include "../expression/expression.hpp"
 
 typedef audi::gdual<audi::vectorized<double>> gdual_v;
 
@@ -55,7 +54,7 @@ double calc_loss(
 }
 
 double gradient_descent(
-    expression<gdual_v> *const self,
+    const expression<gdual_v> *const self,
     const unsigned &max_steps,
     vector<gdual_v> &inputs,
     const vector<gdual_v> &labels,
@@ -91,9 +90,11 @@ double gradient_descent(
       inputs[const_offset + i] -= normalized_gradients[i] * learning_rate;
 
     double new_loss = calc_loss(self, inputs, labels, loss_expression);
+
     bool new_loss_is_better = new_loss < loss;
     bool lr_is_valid = learning_rate > std::numeric_limits<double>::epsilon();
     bool is_finite_loss = std::isfinite(new_loss);
+
     while (lr_is_valid && (!is_finite_loss || !new_loss_is_better))
     {
       learning_rate /= 2.0;
@@ -102,6 +103,7 @@ double gradient_descent(
         inputs[const_offset + i] = start_constants[i] - normalized_gradients[i] * learning_rate;
 
       new_loss = calc_loss(self, inputs, labels, loss_expression);
+
       new_loss_is_better = new_loss < loss;
       lr_is_valid = learning_rate > std::numeric_limits<double>::epsilon();
       is_finite_loss = std::isfinite(new_loss);
@@ -127,7 +129,7 @@ double gradient_descent(
 extern "C"
 {
   double EMSCRIPTEN_KEEPALIVE algorithm_gradient_descent(
-      const custom_expression<double> *const self,
+      const expression<double> *const self,
       const unsigned max_steps,
       const double *const x_array,
       const double *const yt_array,
@@ -148,7 +150,7 @@ extern "C"
     // fill the x and yt vectors with the transposed provided x_array and yt_array.
     // use separate scope to remove unnecessary variable from memory stack during gradient descent.
     {
-      vector<vector<double>> x_double(num_inputs, vector<double>(xy_length));
+      vector<vector<double>> x_double(inputs_length, vector<double>(xy_length));
       vector<vector<double>> yt_double(num_outputs, vector<double>(xy_length));
 
       for (size_t i = 0; i < xy_length; i++)

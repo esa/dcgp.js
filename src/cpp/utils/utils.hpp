@@ -3,11 +3,10 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <random>
 #include <dcgp/expression.hpp>
 #include <dcgp/kernel.hpp>
 #include <dcgp/kernel_set.hpp>
-
-#include "../expression/expression.hpp"
 
 using namespace dcgp;
 
@@ -27,8 +26,7 @@ void fill_strings_vector(
     const unsigned &length);
 
 template <typename T, typename C>
-custom_expression<C> *convert_expression_type(
-    const custom_expression<T> *const current)
+expression<C> *convert_expression_type(const expression<T> *const current)
 {
   const std::vector<kernel<T>> kernels = current->get_f();
 
@@ -41,13 +39,17 @@ custom_expression<C> *convert_expression_type(
 
     // transform protected division to regular division because
     // the gdual types do not support protected division.
-    if (kernel_name == "pdiv") kernel_names.push_back("div");
-    else kernel_names.push_back(kernel_name);
+    if (kernel_name == "pdiv")
+      kernel_names.push_back("div");
+    else
+      kernel_names.push_back(kernel_name);
   }
 
   kernel_set<C> converted_kernel_set(kernel_names);
 
-  custom_expression<C> *converted = new custom_expression<C>(
+  std::random_device rd;
+
+  expression<C> *converted = new expression<C>(
       current->get_n(),
       current->get_m(),
       current->get_r(),
@@ -55,7 +57,7 @@ custom_expression<C> *convert_expression_type(
       current->get_l(),
       current->get_arity(),
       converted_kernel_set.operator()(),
-      current->get_seed());
+      std::uniform_int_distribution<unsigned>()(rd));
 
   converted->set(current->get());
 
